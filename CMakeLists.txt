@@ -11,7 +11,13 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(mini_minecraft main.cpp
         Window.cpp
-        Window.h)
+        Window.h
+        src/Renderer.cpp
+        src/Renderer.h
+        src/VertexBuffer.cpp
+        src/VertexBuffer.h
+        src/IndexBuffer.cpp
+        src/IndexBuffer.h)
 
 target_include_directories(mini_minecraft PRIVATE
     ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR}
