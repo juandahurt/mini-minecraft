@@ -17,7 +17,11 @@ add_executable(mini_minecraft main.cpp
         src/VertexBuffer.cpp
         src/VertexBuffer.h
         src/IndexBuffer.cpp
-        src/IndexBuffer.h)
+        src/IndexBuffer.h
+        src/VertexArray.cpp
+        src/VertexArray.h
+        src/VertexBufferLayout.cpp
+        src/VertexBufferLayout.h)
 
 target_include_directories(mini_minecraft PRIVATE
     ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR}

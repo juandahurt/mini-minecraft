@@ -1,6 +1,10 @@
 #include "Window.h"
 
 #include <iostream>
+
+#include "src/VertexArray.h"
+#include "src/VertexBuffer.h"
+#include "src/VertexBufferLayout.h"
 #ifdef __APPLE_CC__
 #include <GLUT/glut.h>
 #include <OpenGL/gl3.h>
@@ -69,21 +73,20 @@ void Window::create(int argc, char** argv) {
         0.5f, -0.5f,
     };
 
-    // make buffer
-    unsigned int buffer;
-    glGenBuffers(1, &buffer);
+    auto vbo = new VertexBuffer(&vertices, sizeof(vertices));
+    auto vao = new VertexArray();
+    auto layout = new VertexBufferLayout();
+    layout->push<float>(2);
+    vao->addBuffer(*vbo, *layout);
 
-    // bind to the new buffer
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    // set data to the buffer
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    vao->bind();
+    vbo->bind();
 
-
-    unsigned int vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)nullptr);
+    // unsigned int vao;
+    // glGenVertexArrays(1, &vao);
+    // glBindVertexArray(vao);
+    // glEnableVertexAttribArray(0);
+    // glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)nullptr);
 
     std::string vertexShaderSource =
         "#version 330 core\n"
