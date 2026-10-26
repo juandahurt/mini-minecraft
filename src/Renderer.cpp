@@ -13,3 +13,15 @@ void GLLogCall(const char* function, const char* file, const int line) {
         std::cerr << "[OpenGL error]: (" << error << ")" << function << " " << file << ":" << line << std::endl;
     }
 }
+
+void Renderer::clear(float r, float g, float b, float a) {
+    GLCall(glClearColor(r, g, b, a));
+    GLCall(glClear(GL_COLOR_BUFFER_BIT));
+}
+
+void Renderer::draw(const IndexBuffer &indexBuffer, const VertexBuffer &vertexBuffer, const ShaderProgram &shaderProgram) const {
+    vertexBuffer.bind();
+    indexBuffer.bind();
+    shaderProgram.bind();
+    GLCall(glDrawElements(GL_TRIANGLES, indexBuffer.getCount(), GL_UNSIGNED_INT, nullptr));
+}

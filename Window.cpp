@@ -35,26 +35,6 @@ void Window::create(int argc, char** argv) {
           << glGetString(GL_SHADING_LANGUAGE_VERSION)
           << std::endl;
 
-    float vertices[6] = {
-        -0.5f, -0.5f,
-        0.0f, 0.5f,
-        0.5f, -0.5f,
-    };
-
-    auto vbo = new VertexBuffer(&vertices, sizeof(vertices));
-    auto vao = new VertexArray();
-    auto layout = new VertexBufferLayout();
-    layout->push<float>(2);
-    vao->addBuffer(*vbo, *layout);
-
-    vao->bind();
-    vbo->bind();
-
-    auto vertexS = new Shader("../res/shaders/shader.vert", ShaderType::VERTEX);
-    auto fragS = new Shader("../res/shaders/shader.frag", ShaderType::FRAGMENT);
-    auto program = new ShaderProgram(*vertexS, *fragS);
-    program->bind();
-
     glutIdleFunc(onUpdateWrapper);
     glutDisplayFunc(onDisplayWrapper);
     glutMainLoop();
@@ -76,11 +56,30 @@ void Window::onUpdate() {
 
 void Window::onDisplay() {
     std::cout << "Window::onDisplay()" << std::endl;
+    m_renderer->clear(1, 1, 1, 1);
 
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    float vertices[6] = {
+        -0.5f, -0.5f,
+        0.0f, 0.5f,
+        0.5f, -0.5f,
+    };
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    auto vbo = VertexBuffer(&vertices, sizeof(vertices));
+    auto vao = VertexArray();
+    auto layout = VertexBufferLayout();
+    layout.push<float>(2);
+    vao.addBuffer(vbo, layout);
+
+    unsigned int indices[6] = {
+        0, 1, 2
+    };
+    auto indexBuffer = IndexBuffer(indices, sizeof(indices));
+
+    auto vertexS = Shader("../res/shaders/shader.vert", ShaderType::VERTEX);
+    auto fragS = Shader("../res/shaders/shader.frag", ShaderType::FRAGMENT);
+    auto program = ShaderProgram(vertexS, fragS);
+
+    m_renderer->draw(indexBuffer, vbo, program);
 
     glutSwapBuffers();
 }

@@ -1,7 +1,14 @@
 #ifndef MINI_MINECRAFT_WINDOW_H
 #define MINI_MINECRAFT_WINDOW_H
+#include "src/Renderer.h"
 
 class Window {
+private:
+    const char* m_title;
+    int m_width;
+    int m_height;
+
+    Renderer* m_renderer;
 public:
     Window();
     ~Window();
@@ -15,10 +22,6 @@ public:
     // callbacks
     void onUpdate();
     void onDisplay();
-private:
-    const char* m_title;
-    int m_width;
-    int m_height;
 };
 
 #endif //MINI_MINECRAFT_WINDOW_H
