@@ -25,3 +25,15 @@ void ShaderProgram::bind() const {
 void ShaderProgram::unbind() {
     GLCall(glUseProgram(0));
 }
+
+void ShaderProgram::setUniformMat4(const std::string &name, const glm::mat4 &matrix) {
+    GLCall(glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, &matrix[0][0]));
+}
+
+int ShaderProgram::getUniformLocation(const std::string &name) const {
+    GLCall(unsigned int location = glGetUniformLocation(m_id, name.c_str()));
+    if (location == -1) {
+        std::cerr << "Warning: uniform " << name << " does not exist!" << std::endl;
+    }
+    return location;
+}

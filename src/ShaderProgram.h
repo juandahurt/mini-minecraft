@@ -5,7 +5,7 @@
 #ifndef MINI_MINECRAFT_SHADERPROGRAM_H
 #define MINI_MINECRAFT_SHADERPROGRAM_H
 #include "Shader.h"
-
+#include <glm/matrix.hpp>
 
 class ShaderProgram {
 private:
@@ -16,6 +16,11 @@ public:
 
     void bind() const;
     void unbind();
+
+    void setUniformMat4(const std::string& name, const glm::mat4& matrix);
+
+private:
+    int getUniformLocation(const std::string& name) const;
 };
 
 
