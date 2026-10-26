@@ -21,7 +21,11 @@ add_executable(mini_minecraft main.cpp
         src/VertexArray.cpp
         src/VertexArray.h
         src/VertexBufferLayout.cpp
-        src/VertexBufferLayout.h)
+        src/VertexBufferLayout.h
+        src/Shader.cpp
+        src/Shader.h
+        src/ShaderProgram.cpp
+        src/ShaderProgram.h)
 
 target_include_directories(mini_minecraft PRIVATE
     ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR}
