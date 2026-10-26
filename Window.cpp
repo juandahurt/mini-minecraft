@@ -1,6 +1,13 @@
 #include "Window.h"
 
 #include <iostream>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#ifdef __APPLE_CC__
+#include <GLUT/glut.h>
+#include <OpenGL/gl3.h>
+#endif
 
 #include "src/Renderer.h"
 #include "src/Shader.h"
@@ -8,10 +15,6 @@
 #include "src/VertexArray.h"
 #include "src/VertexBuffer.h"
 #include "src/VertexBufferLayout.h"
-#ifdef __APPLE_CC__
-#include <GLUT/glut.h>
-#include <OpenGL/gl3.h>
-#endif
 
 Window::Window() {
     this->m_width = 640;
@@ -59,9 +62,9 @@ void Window::onDisplay() {
     m_renderer->clear(1, 1, 1, 1);
 
     float vertices[6] = {
-        -0.5f, -0.5f,
-        0.0f, 0.5f,
-        0.5f, -0.5f,
+        50.0f, 100.0f,
+        50.0f, 50.0f,
+        100.0f, 150.0f,
     };
 
     auto vbo = VertexBuffer(&vertices, sizeof(vertices));
@@ -70,14 +73,21 @@ void Window::onDisplay() {
     layout.push<float>(2);
     vao.addBuffer(vbo, layout);
 
-    unsigned int indices[6] = {
+    unsigned int indices[3] = {
         0, 1, 2
     };
-    auto indexBuffer = IndexBuffer(indices, sizeof(indices));
+    auto indexBuffer = IndexBuffer(indices, 3);
 
     auto vertexS = Shader("../res/shaders/shader.vert", ShaderType::VERTEX);
     auto fragS = Shader("../res/shaders/shader.frag", ShaderType::FRAGMENT);
     auto program = ShaderProgram(vertexS, fragS);
+    program.bind();
+
+    auto proj = glm::ortho(-1.0f, (float)this->m_width, 0.0f, (float)this->m_height, -1.0f, 1.0f);
+    auto view = glm::translate(glm::mat4(1), glm::vec3(0.0f, 0.0f, 0.0f));
+    auto mvp = proj * view;
+
+    program.setUniformMat4("u_mvp", mvp);
 
     m_renderer->draw(indexBuffer, vbo, program);
 

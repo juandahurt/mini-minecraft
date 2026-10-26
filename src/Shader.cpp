@@ -59,6 +59,6 @@ unsigned int Shader::mapShaderType() const {
     return 0;
 }
 
-unsigned int Shader::getId() const {
+unsigned int Shader:: getId() const {
     return m_id;
 }

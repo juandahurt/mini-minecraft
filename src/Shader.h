@@ -18,12 +18,10 @@ private:
 public:
     Shader(const std::string& filePath, ShaderType type);
     ~Shader();
-
-    void setUniform4f(const std::string& name, int v0, int v1, int v2, int v3);
+    
     unsigned int getId() const;
 
 private:
-    unsigned int getUniformLocation(const std::string& name);
     void createShader(const std::string& source);
     bool compile(unsigned int shaderId, const std::string& source);
     unsigned int mapShaderType() const;
