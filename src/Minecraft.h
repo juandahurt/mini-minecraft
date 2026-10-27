@@ -3,11 +3,11 @@
 #include <memory>
 #include <string>
 #include <glm/glm.hpp>
-#include "src/Renderer.h"
-#include "src/Texture.h"
-#include "src/VertexArray.h"
+#include "Renderer.h"
+#include "Texture.h"
+#include "VertexArray.h"
 
-class Window {
+class Minecraft {
 private:
     std::string m_title;
     int m_width;
@@ -24,11 +24,13 @@ private:
     void setup();
 
 public:
-    Window();
-    ~Window();
+    Minecraft();
+    ~Minecraft();
+
+    void run();
 
     // just some wrapping so we can work with glut :)
-    inline static std::unique_ptr<Window> instance;
+    inline static std::unique_ptr<Minecraft> instance;
     static void create(int argc, char** argv);
     static void onUpdateWrapper();
     static void onDisplayWrapper();

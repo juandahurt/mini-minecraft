@@ -12,8 +12,8 @@ set(IMGUI_DIR vendor/imgui)
 set(STB_DIR vendor/stb)
 
 add_executable(mini_minecraft main.cpp
-        Window.cpp
-        Window.h
+        src/Minecraft.cpp
+        src/Minecraft.h
         src/Renderer.cpp
         src/Renderer.h
         src/VertexBuffer.cpp

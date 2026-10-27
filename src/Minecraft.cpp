@@ -1,4 +1,4 @@
-#include "Window.h"
+#include "Minecraft.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -11,23 +11,27 @@
 #include "imgui.h"
 #include "imgui_impl_glut.h"
 #include "imgui_impl_opengl3.h"
-#include "src/Shader.h"
-#include "src/Texture.h"
-#include "src/VertexBufferLayout.h"
+#include "Shader.h"
+#include "Texture.h"
+#include "VertexBufferLayout.h"
 
-Window::Window()
+Minecraft::Minecraft()
     : m_title("Example :)")
     , m_width(1080)
     , m_height(720)
     , m_translation(0.0f, 0.0f, 0.0f) {}
 
-Window::~Window() {
+Minecraft::~Minecraft() {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGLUT_Shutdown();
 }
 
-void Window::create(int argc, char** argv) {
-    instance = std::make_unique<Window>();
+void Minecraft::run() {
+    glutMainLoop();
+}
+
+void Minecraft::create(int argc, char** argv) {
+    instance = std::make_unique<Minecraft>();
 
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_3_2_CORE_PROFILE);
@@ -49,10 +53,9 @@ void Window::create(int argc, char** argv) {
     glutMotionFunc(onMotionWrapper);
     glutPassiveMotionFunc(onPassiveMotionWrapper);
     glutKeyboardFunc(onKeyboardWrapper);
-    glutMainLoop();
 }
 
-void Window::setup() {
+void Minecraft::setup() {
     m_renderer = std::make_unique<Renderer>();
 
     float one = 256.0f / 16 / 256.0f;
@@ -82,49 +85,49 @@ void Window::setup() {
 }
 
 // Wrappers
-void Window::onDisplayWrapper() { instance->onDisplay(); }
-void Window::onUpdateWrapper() { instance->onUpdate(); }
+void Minecraft::onDisplayWrapper() { instance->onDisplay(); }
+void Minecraft::onUpdateWrapper() { instance->onUpdate(); }
 
 // Callbacks
-void Window::onReshapeWrapper(int w, int h) {
+void Minecraft::onReshapeWrapper(int w, int h) {
     ImGui_ImplGLUT_ReshapeFunc(w, h);
     instance->onReshape(w, h);
 }
 
-void Window::onMouseWrapper(int button, int state, int x, int y) {
+void Minecraft::onMouseWrapper(int button, int state, int x, int y) {
     ImGui_ImplGLUT_MouseFunc(button, state, x, y);
     instance->onMouse(button, state, x, y);
 }
 
-void Window::onMotionWrapper(int x, int y) {
+void Minecraft::onMotionWrapper(int x, int y) {
     ImGui_ImplGLUT_MotionFunc(x, y);
     instance->onMotion(x, y);
 }
 
-void Window::onPassiveMotionWrapper(int x, int y) {
+void Minecraft::onPassiveMotionWrapper(int x, int y) {
     ImGui_ImplGLUT_MotionFunc(x, y);
     instance->onPassiveMotion(x, y);
 }
 
-void Window::onKeyboardWrapper(unsigned char key, int x, int y) {
+void Minecraft::onKeyboardWrapper(unsigned char key, int x, int y) {
     ImGui_ImplGLUT_KeyboardFunc(key, x, y);
     instance->onKeyboard(key, x, y);
 }
 
-void Window::onReshape(int w, int h) {
+void Minecraft::onReshape(int w, int h) {
     // TODO: update projection matrix
 }
 
-void Window::onMouse(int button, int state, int x, int y) {}
-void Window::onMotion(int x, int y) {}
-void Window::onPassiveMotion(int x, int y) {}
-void Window::onKeyboard(unsigned char key, int x, int y) {}
+void Minecraft::onMouse(int button, int state, int x, int y) {}
+void Minecraft::onMotion(int x, int y) {}
+void Minecraft::onPassiveMotion(int x, int y) {}
+void Minecraft::onKeyboard(unsigned char key, int x, int y) {}
 
-void Window::onUpdate() {
+void Minecraft::onUpdate() {
     glutPostRedisplay();
 }
 
-void Window::onDisplay() {
+void Minecraft::onDisplay() {
     m_renderer->clear(1, 1, 1, 1);
 
     m_program->bind();
