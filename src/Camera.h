@@ -25,7 +25,8 @@ public:
     void setFront(glm::vec3 front);
     glm::vec3 getUp();
     void setUp(glm::vec3 up);
-    float getSpeed();
+    float getSpeed() const;
+    void setSpeed(float speed);
 };
 
 

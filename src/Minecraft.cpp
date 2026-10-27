@@ -179,7 +179,9 @@ void Minecraft::onDisplay() {
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
         ImGui::Text("OpenGL: %s", glGetString(GL_VERSION));
         ImGui::Text("GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
-        ImGui::SliderFloat("Translation", &m_translation.z, -100.0f, 100.0f);
+        float speed = m_camera->getSpeed();
+        if (ImGui::SliderFloat("Camera Speed", &speed, 0.1f, 0.6f))
+            m_camera->setSpeed(speed);
         ImGui::Separator();
         ImGui::Text("Vertices: 3");
         ImGui::End();

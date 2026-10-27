@@ -42,6 +42,10 @@ void Camera::setUp(glm::vec3 up) {
     m_up = up;
 }
 
-float Camera::getSpeed() {
+float Camera::getSpeed() const {
     return m_speed;
+}
+
+void Camera::setSpeed(float speed) {
+    m_speed = speed;
 }
