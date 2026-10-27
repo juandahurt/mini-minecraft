@@ -19,7 +19,9 @@ Minecraft::Minecraft()
     : m_title("Example :)")
     , m_width(1080)
     , m_height(720)
-    , m_translation(0.0f, 0.0f, 0.0f) {}
+    , m_translation(0.0f, 0.0f, 0.0f) {
+    m_camera = std::make_unique<Camera>();
+}
 
 Minecraft::~Minecraft() {
     ImGui_ImplOpenGL3_Shutdown();
@@ -59,17 +61,17 @@ void Minecraft::setup() {
     m_renderer = std::make_unique<Renderer>();
 
     float one = 256.0f / 16 / 256.0f;
-    float vertices[16] = {
-        100.0f, 100.0f, 0.0f, one, // top left
-        100.0f, 150.0f, 0.0f, 0.0f, // bottom left
-        150.0f, 100.0f, one, one, // top right
-        150.0f, 150.0f, one, 0.0f // bottom right
+    float vertices[] = {
+        0.0f, 0.0f, 1.0f, 0.0f, one, // top left
+        0.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom left
+        1.0f, 0.0f, 1.0f, one, one, // top right
+        1.0f, 1.0f, 1.0f, one, 0.0f // bottom right
     };
 
     m_vbo = std::make_unique<VertexBuffer>(&vertices, sizeof(vertices));
     m_vao = std::make_unique<VertexArray>();
     auto layout = VertexBufferLayout();
-    layout.push<float>(2);
+    layout.push<float>(3);
     layout.push<float>(2);
     m_vao->addBuffer(*m_vbo, layout);
 
@@ -115,13 +117,28 @@ void Minecraft::onKeyboardWrapper(unsigned char key, int x, int y) {
 }
 
 void Minecraft::onReshape(int w, int h) {
-    // TODO: update projection matrix
+    m_projection = glm::perspective(glm::radians(60.0f), (float)w / (float)h, 0.1f, 100.0f);
 }
 
 void Minecraft::onMouse(int button, int state, int x, int y) {}
 void Minecraft::onMotion(int x, int y) {}
 void Minecraft::onPassiveMotion(int x, int y) {}
-void Minecraft::onKeyboard(unsigned char key, int x, int y) {}
+
+void Minecraft::onKeyboard(unsigned char key, int x, int y) {
+    auto speed = m_camera->getSpeed();
+    if (key == 'w') {
+        m_camera->setPosition(m_camera->getPosition() + m_camera->getFront() * speed);
+    }
+    if (key == 's') {
+        m_camera->setPosition(m_camera->getPosition() - m_camera->getFront() * speed);
+    }
+    if (key == 'a') {
+        m_camera->setPosition(m_camera->getPosition() - glm::normalize(glm::cross(m_camera->getFront(), m_camera->getUp())) * speed);
+    }
+    if (key == 'd') {
+        m_camera->setPosition(m_camera->getPosition() + glm::normalize(glm::cross(m_camera->getFront(), m_camera->getUp())) * speed);
+    }
+}
 
 void Minecraft::onUpdate() {
     glutPostRedisplay();
@@ -132,9 +149,8 @@ void Minecraft::onDisplay() {
 
     m_program->bind();
 
-    auto proj = glm::ortho(-1.0f, (float)m_width, 0.0f, (float)m_height, -1.0f, 1.0f);
-    auto view = glm::translate(glm::mat4(1), m_translation);
-    auto mvp = proj * view;
+    auto view = m_camera->getViewMatrix();
+    auto mvp = m_projection * view;
 
     m_program->setUniformMat4("u_mvp", mvp);
     m_program->setUniformInt("u_texture", 0);
@@ -151,7 +167,7 @@ void Minecraft::onDisplay() {
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
         ImGui::Text("OpenGL: %s", glGetString(GL_VERSION));
         ImGui::Text("GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
-        ImGui::SliderFloat("Translation", &m_translation.x, 0.0f, 100.0f);
+        ImGui::SliderFloat("Translation", &m_translation.z, -100.0f, 100.0f);
         ImGui::Separator();
         ImGui::Text("Vertices: 3");
         ImGui::End();

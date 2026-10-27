@@ -35,7 +35,9 @@ add_executable(mini_minecraft main.cpp
         ${IMGUI_DIR}/backends/imgui_impl_glut.cpp
         ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
         src/Texture.cpp
-        src/Texture.h)
+        src/Texture.h
+        src/Camera.cpp
+        src/Camera.h)
 
 target_include_directories(mini_minecraft PRIVATE
         ${OPENGL_INCLUDE_DIR}

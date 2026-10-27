@@ -3,6 +3,8 @@
 #include <memory>
 #include <string>
 #include <glm/glm.hpp>
+
+#include "Camera.h"
 #include "Renderer.h"
 #include "Texture.h"
 #include "VertexArray.h"
@@ -20,6 +22,10 @@ private:
     std::unique_ptr<ShaderProgram> m_program;
     std::unique_ptr<Texture> m_texture;
     glm::vec3 m_translation;
+
+    glm::mat4 m_projection;
+
+    std::unique_ptr<Camera> m_camera;
 
     void setup();
 
