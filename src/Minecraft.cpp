@@ -55,6 +55,7 @@ void Minecraft::create(int argc, char** argv) {
     glutMotionFunc(onMotionWrapper);
     glutPassiveMotionFunc(onPassiveMotionWrapper);
     glutKeyboardFunc(onKeyboardWrapper);
+    glutKeyboardUpFunc(onKeyboardUpWrapper);
 }
 
 void Minecraft::setup() {
@@ -88,9 +89,9 @@ void Minecraft::setup() {
 
 // Wrappers
 void Minecraft::onDisplayWrapper() { instance->onDisplay(); }
+
 void Minecraft::onUpdateWrapper() { instance->onUpdate(); }
 
-// Callbacks
 void Minecraft::onReshapeWrapper(int w, int h) {
     ImGui_ImplGLUT_ReshapeFunc(w, h);
     instance->onReshape(w, h);
@@ -116,6 +117,11 @@ void Minecraft::onKeyboardWrapper(unsigned char key, int x, int y) {
     instance->onKeyboard(key, x, y);
 }
 
+void Minecraft::onKeyboardUpWrapper(unsigned char key, int x, int y) {
+    ImGui_ImplGLUT_KeyboardUpFunc(key, x, y);
+    instance->onKeyboardUp(key, x, y);
+}
+
 void Minecraft::onReshape(int w, int h) {
     m_projection = glm::perspective(glm::radians(60.0f), (float)w / (float)h, 0.1f, 100.0f);
 }
@@ -125,22 +131,28 @@ void Minecraft::onMotion(int x, int y) {}
 void Minecraft::onPassiveMotion(int x, int y) {}
 
 void Minecraft::onKeyboard(unsigned char key, int x, int y) {
-    auto speed = m_camera->getSpeed();
-    if (key == 'w') {
-        m_camera->setPosition(m_camera->getPosition() + m_camera->getFront() * speed);
-    }
-    if (key == 's') {
-        m_camera->setPosition(m_camera->getPosition() - m_camera->getFront() * speed);
-    }
-    if (key == 'a') {
-        m_camera->setPosition(m_camera->getPosition() - glm::normalize(glm::cross(m_camera->getFront(), m_camera->getUp())) * speed);
-    }
-    if (key == 'd') {
-        m_camera->setPosition(m_camera->getPosition() + glm::normalize(glm::cross(m_camera->getFront(), m_camera->getUp())) * speed);
-    }
+    m_pressedKeys.insert(key);
+}
+
+void Minecraft::onKeyboardUp(unsigned char key, int x, int y) {
+    m_pressedKeys.erase(key);
 }
 
 void Minecraft::onUpdate() {
+    auto speed = m_camera->getSpeed();
+    if (m_pressedKeys.contains('w')) {
+        m_camera->setPosition(m_camera->getPosition() + m_camera->getFront() * speed);
+    }
+    if (m_pressedKeys.contains('s')) {
+        m_camera->setPosition(m_camera->getPosition() - m_camera->getFront() * speed);
+    }
+    if (m_pressedKeys.contains('a')) {
+        m_camera->setPosition(m_camera->getPosition() - glm::normalize(glm::cross(m_camera->getFront(), m_camera->getUp())) * speed);
+    }
+    if (m_pressedKeys.contains('d')) {
+        m_camera->setPosition(m_camera->getPosition() + glm::normalize(glm::cross(m_camera->getFront(), m_camera->getUp())) * speed);
+    }
+
     glutPostRedisplay();
 }
 

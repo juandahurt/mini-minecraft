@@ -2,6 +2,7 @@
 #define MINI_MINECRAFT_WINDOW_H
 #include <memory>
 #include <string>
+#include <unordered_set>
 #include <glm/glm.hpp>
 
 #include "Camera.h"
@@ -27,6 +28,8 @@ private:
 
     std::unique_ptr<Camera> m_camera;
 
+    std::unordered_set<unsigned char> m_pressedKeys;
+
     void setup();
 
 public:
@@ -45,6 +48,7 @@ public:
     static void onMotionWrapper(int x, int y);
     static void onPassiveMotionWrapper(int x, int y);
     static void onKeyboardWrapper(unsigned char key, int x, int y);
+    static void onKeyboardUpWrapper(unsigned char key, int x, int y);
 
     // callbacks
     void onUpdate();
@@ -54,6 +58,7 @@ public:
     void onMotion(int x, int y);
     void onPassiveMotion(int x, int y);
     void onKeyboard(unsigned char key, int x, int y);
+    void onKeyboardUp(unsigned char key, int x, int y);
 };
 
 #endif //MINI_MINECRAFT_WINDOW_H
