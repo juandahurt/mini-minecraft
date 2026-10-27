@@ -9,57 +9,25 @@
 #include <OpenGL/gl3.h>
 #endif
 
-#include "src/Renderer.h"
+#include "imgui.h"
+#include "imgui_impl_glut.h"
+#include "imgui_impl_opengl3.h"
 #include "src/Shader.h"
-#include "src/ShaderProgram.h"
-#include "src/VertexArray.h"
-#include "src/VertexBuffer.h"
 #include "src/VertexBufferLayout.h"
 
-Window::Window() {
-    this->m_width = 640;
-    this->m_height = 480;
-    this->m_title = "Example :)";
+Window::Window()
+    : m_title("Example :)")
+    , m_width(1080)
+    , m_height(720)
+    , m_translation(0.0f, 0.0f, 0.0f) {}
+
+Window::~Window() {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGLUT_Shutdown();
 }
 
-Window::~Window() = default;
-
-void Window::create(int argc, char** argv) {
-    instance = new Window();
-
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_3_2_CORE_PROFILE);
-    glutCreateWindow(instance->m_title);
-
-    std::cout << "OpenGL: "
-          << glGetString(GL_VERSION) << '\n';
-
-    std::cout << "GLSL: "
-          << glGetString(GL_SHADING_LANGUAGE_VERSION)
-          << std::endl;
-
-    glutIdleFunc(onUpdateWrapper);
-    glutDisplayFunc(onDisplayWrapper);
-    glutMainLoop();
-}
-
-// Wrappers
-void Window::onDisplayWrapper() {
-    instance->onDisplay();
-}
-
-void Window::onUpdateWrapper() {
-    instance->onUpdate();
-}
-
-// Callbacks
-void Window::onUpdate() {
-    // std::cout << "Window::onUpdate()" << std::endl;
-}
-
-void Window::onDisplay() {
-    std::cout << "Window::onDisplay()" << std::endl;
-    m_renderer->clear(1, 1, 1, 1);
+void Window::setup() {
+    m_renderer = std::make_unique<Renderer>();
 
     float vertices[6] = {
         50.0f, 100.0f,
@@ -67,29 +35,120 @@ void Window::onDisplay() {
         100.0f, 150.0f,
     };
 
-    auto vbo = VertexBuffer(&vertices, sizeof(vertices));
-    auto vao = VertexArray();
+    m_vbo = std::make_unique<VertexBuffer>(&vertices, sizeof(vertices));
+    m_vao = std::make_unique<VertexArray>();
     auto layout = VertexBufferLayout();
     layout.push<float>(2);
-    vao.addBuffer(vbo, layout);
+    m_vao->addBuffer(*m_vbo, layout);
 
-    unsigned int indices[3] = {
-        0, 1, 2
-    };
-    auto indexBuffer = IndexBuffer(indices, 3);
+    unsigned int indices[3] = { 0, 1, 2 };
+    m_indexBuffer = std::make_unique<IndexBuffer>(indices, 3);
 
     auto vertexS = Shader("../res/shaders/shader.vert", ShaderType::VERTEX);
     auto fragS = Shader("../res/shaders/shader.frag", ShaderType::FRAGMENT);
-    auto program = ShaderProgram(vertexS, fragS);
-    program.bind();
+    m_program = std::make_unique<ShaderProgram>(vertexS, fragS);
+}
 
-    auto proj = glm::ortho(-1.0f, (float)this->m_width, 0.0f, (float)this->m_height, -1.0f, 1.0f);
-    auto view = glm::translate(glm::mat4(1), glm::vec3(0.0f, 0.0f, 0.0f));
+void Window::create(int argc, char** argv) {
+    instance = std::make_unique<Window>();
+
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_3_2_CORE_PROFILE);
+    glutInitWindowSize(instance->m_width, instance->m_height);
+    glutInitWindowPosition(350, 450);
+    glutCreateWindow(instance->m_title.c_str());
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui_ImplGLUT_Init();
+    ImGui_ImplOpenGL3_Init("#version 330");
+
+    instance->setup();
+
+    glutIdleFunc(onUpdateWrapper);
+    glutDisplayFunc(onDisplayWrapper);
+    glutReshapeFunc(onReshapeWrapper);
+    glutMouseFunc(onMouseWrapper);
+    glutMotionFunc(onMotionWrapper);
+    glutPassiveMotionFunc(onPassiveMotionWrapper);
+    glutKeyboardFunc(onKeyboardWrapper);
+    glutMainLoop();
+}
+
+// Wrappers
+void Window::onDisplayWrapper() { instance->onDisplay(); }
+void Window::onUpdateWrapper() { instance->onUpdate(); }
+
+// Callbacks
+void Window::onReshapeWrapper(int w, int h) {
+    ImGui_ImplGLUT_ReshapeFunc(w, h);
+    instance->onReshape(w, h);
+}
+
+void Window::onMouseWrapper(int button, int state, int x, int y) {
+    ImGui_ImplGLUT_MouseFunc(button, state, x, y);
+    instance->onMouse(button, state, x, y);
+}
+
+void Window::onMotionWrapper(int x, int y) {
+    ImGui_ImplGLUT_MotionFunc(x, y);
+    instance->onMotion(x, y);
+}
+
+void Window::onPassiveMotionWrapper(int x, int y) {
+    ImGui_ImplGLUT_MotionFunc(x, y);
+    instance->onPassiveMotion(x, y);
+}
+
+void Window::onKeyboardWrapper(unsigned char key, int x, int y) {
+    ImGui_ImplGLUT_KeyboardFunc(key, x, y);
+    instance->onKeyboard(key, x, y);
+}
+
+void Window::onReshape(int w, int h) {
+    // TODO: update projection matrix
+}
+
+void Window::onMouse(int button, int state, int x, int y) {}
+void Window::onMotion(int x, int y) {}
+void Window::onPassiveMotion(int x, int y) {}
+void Window::onKeyboard(unsigned char key, int x, int y) {}
+
+void Window::onUpdate() {
+    glutPostRedisplay();
+}
+
+void Window::onDisplay() {
+    m_renderer->clear(1, 1, 1, 1);
+
+    m_program->bind();
+
+    auto proj = glm::ortho(-1.0f, (float)m_width, 0.0f, (float)m_height, -1.0f, 1.0f);
+    auto view = glm::translate(glm::mat4(1), m_translation);
     auto mvp = proj * view;
 
-    program.setUniformMat4("u_mvp", mvp);
+    m_program->setUniformMat4("u_mvp", mvp);
 
-    m_renderer->draw(indexBuffer, vbo, program);
+    m_renderer->draw(*m_indexBuffer, *m_vbo, *m_program);
+
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGLUT_NewFrame();
+    ImGui::NewFrame();
+
+    static bool showDebug = true;
+    if (showDebug) {
+        ImGui::Begin("Debug", &showDebug, ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+        ImGui::Text("OpenGL: %s", glGetString(GL_VERSION));
+        ImGui::Text("GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
+        ImGui::SliderFloat("Translation", &m_translation.x, 0.0f, 100.0f);
+        ImGui::Separator();
+        ImGui::Text("Vertices: 3");
+        ImGui::End();
+    }
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     glutSwapBuffers();
 }

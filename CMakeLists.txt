@@ -8,6 +8,7 @@ find_package(GLM REQUIRED)
 add_compile_definitions(GL_SILENCE_DEPRECATION)
 
 set(CMAKE_CXX_STANDARD 20)
+set(IMGUI_DIR vendor/imgui)
 
 add_executable(mini_minecraft main.cpp
         Window.cpp
@@ -25,10 +26,19 @@ add_executable(mini_minecraft main.cpp
         src/Shader.cpp
         src/Shader.h
         src/ShaderProgram.cpp
-        src/ShaderProgram.h)
+        src/ShaderProgram.h
+        ${IMGUI_DIR}/imgui.cpp
+        ${IMGUI_DIR}/imgui_draw.cpp
+        ${IMGUI_DIR}/imgui_tables.cpp
+        ${IMGUI_DIR}/imgui_widgets.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_glut.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp)
 
 target_include_directories(mini_minecraft PRIVATE
-    ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR}
+        ${OPENGL_INCLUDE_DIR}
+        ${GLUT_INCLUDE_DIR}
+        ${IMGUI_DIR}
+        ${IMGUI_DIR}/backends
 )
 
 target_link_libraries(mini_minecraft PRIVATE "-framework OpenGL -framework GLUT" glm::glm)
