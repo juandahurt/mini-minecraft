@@ -1,27 +1,49 @@
 #ifndef MINI_MINECRAFT_WINDOW_H
 #define MINI_MINECRAFT_WINDOW_H
+#include <memory>
+#include <string>
+#include <glm/glm.hpp>
 #include "src/Renderer.h"
+#include "src/VertexArray.h"
 
 class Window {
 private:
-    const char* m_title;
+    std::string m_title;
     int m_width;
     int m_height;
 
-    Renderer* m_renderer;
+    std::unique_ptr<Renderer> m_renderer;
+    std::unique_ptr<VertexArray> m_vao;
+    std::unique_ptr<VertexBuffer> m_vbo;
+    std::unique_ptr<IndexBuffer> m_indexBuffer;
+    std::unique_ptr<ShaderProgram> m_program;
+    glm::vec3 m_translation;
+
+    void setup();
+
 public:
     Window();
     ~Window();
 
     // just some wrapping so we can work with glut :)
-    inline static Window* instance;
+    inline static std::unique_ptr<Window> instance;
     static void create(int argc, char** argv);
     static void onUpdateWrapper();
     static void onDisplayWrapper();
+    static void onReshapeWrapper(int w, int h);
+    static void onMouseWrapper(int button, int state, int x, int y);
+    static void onMotionWrapper(int x, int y);
+    static void onPassiveMotionWrapper(int x, int y);
+    static void onKeyboardWrapper(unsigned char key, int x, int y);
 
     // callbacks
     void onUpdate();
     void onDisplay();
+    void onReshape(int w, int h);
+    void onMouse(int button, int state, int x, int y);
+    void onMotion(int x, int y);
+    void onPassiveMotion(int x, int y);
+    void onKeyboard(unsigned char key, int x, int y);
 };
 
 #endif //MINI_MINECRAFT_WINDOW_H
