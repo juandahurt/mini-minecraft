@@ -4,6 +4,7 @@
 #include <string>
 #include <glm/glm.hpp>
 #include "src/Renderer.h"
+#include "src/Texture.h"
 #include "src/VertexArray.h"
 
 class Window {
@@ -17,6 +18,7 @@ private:
     std::unique_ptr<VertexBuffer> m_vbo;
     std::unique_ptr<IndexBuffer> m_indexBuffer;
     std::unique_ptr<ShaderProgram> m_program;
+    std::unique_ptr<Texture> m_texture;
     glm::vec3 m_translation;
 
     void setup();

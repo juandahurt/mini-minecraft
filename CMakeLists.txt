@@ -9,6 +9,7 @@ add_compile_definitions(GL_SILENCE_DEPRECATION)
 
 set(CMAKE_CXX_STANDARD 20)
 set(IMGUI_DIR vendor/imgui)
+set(STB_DIR vendor/stb)
 
 add_executable(mini_minecraft main.cpp
         Window.cpp
@@ -32,13 +33,16 @@ add_executable(mini_minecraft main.cpp
         ${IMGUI_DIR}/imgui_tables.cpp
         ${IMGUI_DIR}/imgui_widgets.cpp
         ${IMGUI_DIR}/backends/imgui_impl_glut.cpp
-        ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp)
+        ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+        src/Texture.cpp
+        src/Texture.h)
 
 target_include_directories(mini_minecraft PRIVATE
         ${OPENGL_INCLUDE_DIR}
         ${GLUT_INCLUDE_DIR}
         ${IMGUI_DIR}
         ${IMGUI_DIR}/backends
+        ${STB_DIR}
 )
 
 target_link_libraries(mini_minecraft PRIVATE "-framework OpenGL -framework GLUT" glm::glm)

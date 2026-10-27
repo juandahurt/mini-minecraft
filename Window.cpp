@@ -1,6 +1,5 @@
 #include "Window.h"
 
-#include <iostream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -13,6 +12,7 @@
 #include "imgui_impl_glut.h"
 #include "imgui_impl_opengl3.h"
 #include "src/Shader.h"
+#include "src/Texture.h"
 #include "src/VertexBufferLayout.h"
 
 Window::Window()
@@ -24,29 +24,6 @@ Window::Window()
 Window::~Window() {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGLUT_Shutdown();
-}
-
-void Window::setup() {
-    m_renderer = std::make_unique<Renderer>();
-
-    float vertices[6] = {
-        50.0f, 100.0f,
-        50.0f, 50.0f,
-        100.0f, 150.0f,
-    };
-
-    m_vbo = std::make_unique<VertexBuffer>(&vertices, sizeof(vertices));
-    m_vao = std::make_unique<VertexArray>();
-    auto layout = VertexBufferLayout();
-    layout.push<float>(2);
-    m_vao->addBuffer(*m_vbo, layout);
-
-    unsigned int indices[3] = { 0, 1, 2 };
-    m_indexBuffer = std::make_unique<IndexBuffer>(indices, 3);
-
-    auto vertexS = Shader("../res/shaders/shader.vert", ShaderType::VERTEX);
-    auto fragS = Shader("../res/shaders/shader.frag", ShaderType::FRAGMENT);
-    m_program = std::make_unique<ShaderProgram>(vertexS, fragS);
 }
 
 void Window::create(int argc, char** argv) {
@@ -73,6 +50,35 @@ void Window::create(int argc, char** argv) {
     glutPassiveMotionFunc(onPassiveMotionWrapper);
     glutKeyboardFunc(onKeyboardWrapper);
     glutMainLoop();
+}
+
+void Window::setup() {
+    m_renderer = std::make_unique<Renderer>();
+
+    float one = 256.0f / 16 / 256.0f;
+    float vertices[16] = {
+        100.0f, 100.0f, 0.0f, one, // top left
+        100.0f, 150.0f, 0.0f, 0.0f, // bottom left
+        150.0f, 100.0f, one, one, // top right
+        150.0f, 150.0f, one, 0.0f // bottom right
+    };
+
+    m_vbo = std::make_unique<VertexBuffer>(&vertices, sizeof(vertices));
+    m_vao = std::make_unique<VertexArray>();
+    auto layout = VertexBufferLayout();
+    layout.push<float>(2);
+    layout.push<float>(2);
+    m_vao->addBuffer(*m_vbo, layout);
+
+    unsigned int indices[6] = { 0, 1, 2, 3, 1, 2 };
+    m_indexBuffer = std::make_unique<IndexBuffer>(indices, 6);
+
+    auto vertexS = Shader("../res/shaders/shader.vert", ShaderType::VERTEX);
+    auto fragS = Shader("../res/shaders/shader.frag", ShaderType::FRAGMENT);
+    m_program = std::make_unique<ShaderProgram>(vertexS, fragS);
+
+    m_texture = std::make_unique<Texture>("../res/textures/atlas.png");
+    m_texture->bind(0);
 }
 
 // Wrappers
@@ -128,6 +134,7 @@ void Window::onDisplay() {
     auto mvp = proj * view;
 
     m_program->setUniformMat4("u_mvp", mvp);
+    m_program->setUniformInt("u_texture", 0);
 
     m_renderer->draw(*m_indexBuffer, *m_vbo, *m_program);
 
