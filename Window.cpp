@@ -60,12 +60,8 @@ void Window::create(int argc, char** argv) {
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-
     ImGui_ImplGLUT_Init();
     ImGui_ImplOpenGL3_Init("#version 330");
-
-    std::cout << "OpenGL: " << glGetString(GL_VERSION) << '\n';
-    std::cout << "GLSL: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << '\n';
 
     instance->setup();
 
@@ -143,6 +139,8 @@ void Window::onDisplay() {
     if (showDebug) {
         ImGui::Begin("Debug", &showDebug, ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+        ImGui::Text("OpenGL: %s", glGetString(GL_VERSION));
+        ImGui::Text("GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
         ImGui::SliderFloat("Translation", &m_translation.x, 0.0f, 100.0f);
         ImGui::Separator();
         ImGui::Text("Vertices: 3");
