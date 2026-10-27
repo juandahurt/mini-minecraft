@@ -18,6 +18,7 @@ public:
     void unbind();
 
     void setUniformMat4(const std::string& name, const glm::mat4& matrix);
+    void setUniformInt(const std::string& name, int value);
 
 private:
     int getUniformLocation(const std::string& name) const;
