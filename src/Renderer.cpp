@@ -25,3 +25,10 @@ void Renderer::draw(const IndexBuffer &indexBuffer, const VertexBuffer &vertexBu
     shaderProgram.bind();
     GLCall(glDrawElements(GL_TRIANGLES, indexBuffer.getCount(), GL_UNSIGNED_INT, nullptr));
 }
+
+void Renderer::drawInstanced(const IndexBuffer &indexBuffer, const VertexBuffer &vertexBuffer, const ShaderProgram &shaderProgram, unsigned int count) const {
+    vertexBuffer.bind();
+    indexBuffer.bind();
+    shaderProgram.bind();
+    GLCall(glDrawElementsInstanced(GL_TRIANGLES, indexBuffer.getCount(), GL_UNSIGNED_INT, nullptr, count));
+}

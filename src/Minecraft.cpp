@@ -21,6 +21,7 @@ Minecraft::Minecraft()
     , m_height(720)
     , m_translation(0.0f, 0.0f, 0.0f) {
     m_camera = std::make_unique<Camera>();
+    m_worldGenerator = std::make_unique<WorldGenerator>(4, 4);
 }
 
 Minecraft::~Minecraft() {
@@ -72,11 +73,6 @@ void Minecraft::setup() {
         0.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom left
         1.0f, 1.0f, 0.0f, one, one, // top right
         1.0f, 1.0f, 1.0f, one, 0.0f, // bottom right
-        // y-
-        0.0f, 0.0f, 0.0f, two, three, // top left
-        0.0f, 0.0f, 1.0f, two, two, // bottom left
-        1.0f, 0.0f, 0.0f, three, three, // top right
-        1.0f, 0.0f, 1.0f, three, two // bottom right
     };
 
     m_vbo = std::make_unique<VertexBuffer>(&vertices, sizeof(vertices));
@@ -86,8 +82,14 @@ void Minecraft::setup() {
     layout.push<float>(2);
     m_vao->addBuffer(*m_vbo, layout);
 
-    unsigned int indices[] = { 0, 1, 2, 3, 1, 2, 4, 5, 6, 7, 5, 6 };
-    m_indexBuffer = std::make_unique<IndexBuffer>(indices, 12);
+    auto worldLayout = VertexBufferLayout();
+    worldLayout.push<float>(3);
+    float world[] = { 1.0f,0,0, 2,0,0, 3,0,0};
+    m_worldVBO = std::make_unique<VertexBuffer>(&world, sizeof(world));
+    m_vao->addInstancedBuffer(*m_worldVBO, worldLayout);
+
+    unsigned int indices[] = { 0, 1, 2, 3, 1, 2 };
+    m_indexBuffer = std::make_unique<IndexBuffer>(indices, 6);
 
     auto vertexS = Shader("../res/shaders/shader.vert", ShaderType::VERTEX);
     auto fragS = Shader("../res/shaders/shader.frag", ShaderType::FRAGMENT);
@@ -198,7 +200,7 @@ void Minecraft::onUpdate() {
 }
 
 void Minecraft::onDisplay() {
-    m_renderer->clear(1, 1, 1, 1);
+    m_renderer->clear(0.164, 0.53, 0.7, 1);
 
     m_program->bind();
 
@@ -208,7 +210,9 @@ void Minecraft::onDisplay() {
     m_program->setUniformMat4("u_mvp", mvp);
     m_program->setUniformInt("u_texture", 0);
 
-    m_renderer->draw(*m_indexBuffer, *m_vbo, *m_program);
+    // m_vao->bind();
+    // m_renderer->draw(*m_indexBuffer, *m_vbo, *m_program);
+    m_renderer->drawInstanced(*m_indexBuffer, *m_vbo, *m_program, 3);
 
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGLUT_NewFrame();

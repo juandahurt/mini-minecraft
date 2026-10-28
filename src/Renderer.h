@@ -23,6 +23,7 @@ class Renderer {
 public:
     void clear(float r, float g, float b, float a);
     void draw(const IndexBuffer& indexBuffer, const VertexBuffer& vertexBuffer, const ShaderProgram& shaderProgram) const;
+    void drawInstanced(const IndexBuffer& indexBuffer, const VertexBuffer& vertexBuffer, const ShaderProgram& shaderProgram, unsigned int count) const;
 };
 
 

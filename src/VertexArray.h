@@ -10,12 +10,14 @@
 class VertexArray {
 private:
     unsigned int m_id;
+    unsigned int m_attribIndex = 0;
 public:
     VertexArray();
     ~VertexArray();
 
     void bind();
     void addBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout);
+    void addInstancedBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout);
 };
 
 

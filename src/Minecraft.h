@@ -9,6 +9,7 @@
 #include "Renderer.h"
 #include "Texture.h"
 #include "VertexArray.h"
+#include "WorldGenerator.h"
 
 class Minecraft {
 private:
@@ -19,6 +20,7 @@ private:
     std::unique_ptr<Renderer> m_renderer;
     std::unique_ptr<VertexArray> m_vao;
     std::unique_ptr<VertexBuffer> m_vbo;
+    std::unique_ptr<VertexBuffer> m_worldVBO;
     std::unique_ptr<IndexBuffer> m_indexBuffer;
     std::unique_ptr<ShaderProgram> m_program;
     std::unique_ptr<Texture> m_texture;
@@ -27,6 +29,7 @@ private:
     glm::mat4 m_projection;
 
     std::unique_ptr<Camera> m_camera;
+    std::unique_ptr<WorldGenerator> m_worldGenerator;
 
     std::unordered_set<unsigned char> m_pressedKeys;
 
