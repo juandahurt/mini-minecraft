@@ -1,7 +1,8 @@
 #include <iostream>
-#include "Window.h"
+#include "src/Minecraft.h"
 
 int main(int argc, char** argv) {
-    Window::create(argc, argv);
+    Minecraft::create(argc, argv);
+    Minecraft::instance->run();
     return 0;
 }

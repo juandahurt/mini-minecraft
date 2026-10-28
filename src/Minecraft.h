@@ -2,12 +2,15 @@
 #define MINI_MINECRAFT_WINDOW_H
 #include <memory>
 #include <string>
+#include <unordered_set>
 #include <glm/glm.hpp>
-#include "src/Renderer.h"
-#include "src/Texture.h"
-#include "src/VertexArray.h"
 
-class Window {
+#include "Camera.h"
+#include "Renderer.h"
+#include "Texture.h"
+#include "VertexArray.h"
+
+class Minecraft {
 private:
     std::string m_title;
     int m_width;
@@ -21,14 +24,22 @@ private:
     std::unique_ptr<Texture> m_texture;
     glm::vec3 m_translation;
 
+    glm::mat4 m_projection;
+
+    std::unique_ptr<Camera> m_camera;
+
+    std::unordered_set<unsigned char> m_pressedKeys;
+
     void setup();
 
 public:
-    Window();
-    ~Window();
+    Minecraft();
+    ~Minecraft();
+
+    void run();
 
     // just some wrapping so we can work with glut :)
-    inline static std::unique_ptr<Window> instance;
+    inline static std::unique_ptr<Minecraft> instance;
     static void create(int argc, char** argv);
     static void onUpdateWrapper();
     static void onDisplayWrapper();
@@ -37,6 +48,7 @@ public:
     static void onMotionWrapper(int x, int y);
     static void onPassiveMotionWrapper(int x, int y);
     static void onKeyboardWrapper(unsigned char key, int x, int y);
+    static void onKeyboardUpWrapper(unsigned char key, int x, int y);
 
     // callbacks
     void onUpdate();
@@ -46,6 +58,7 @@ public:
     void onMotion(int x, int y);
     void onPassiveMotion(int x, int y);
     void onKeyboard(unsigned char key, int x, int y);
+    void onKeyboardUp(unsigned char key, int x, int y);
 };
 
 #endif //MINI_MINECRAFT_WINDOW_H
