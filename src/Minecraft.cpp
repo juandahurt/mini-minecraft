@@ -128,7 +128,35 @@ void Minecraft::onReshape(int w, int h) {
 
 void Minecraft::onMouse(int button, int state, int x, int y) {}
 void Minecraft::onMotion(int x, int y) {}
-void Minecraft::onPassiveMotion(int x, int y) {}
+void Minecraft::onPassiveMotion(int x, int y) {
+    static float lastX = x;
+    static float lastY = y;
+    static float yaw = 90;
+    static float pitch = 0;
+    static float firstMove = true;
+
+    if (firstMove == true) {
+        firstMove = false;
+        lastX = static_cast<float>(x);
+        lastY = static_cast<float>(y);
+        return;
+    }
+
+    float xOffset = static_cast<float>(x) - lastX;
+    lastX = static_cast<float>(x);
+    float yOffset = lastY - static_cast<float>(y);
+    lastY = static_cast<float>(y);
+    float sensibility = 0.1f;
+
+    yaw += xOffset * sensibility;
+    pitch += yOffset * sensibility;
+
+    glm::vec3 direction;
+    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    direction.y = sin(glm::radians(pitch));
+    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    m_camera->setFront(glm::normalize(direction));
+}
 
 void Minecraft::onKeyboard(unsigned char key, int x, int y) {
     m_pressedKeys.insert(key);
