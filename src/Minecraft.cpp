@@ -38,7 +38,9 @@ void Minecraft::create(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_3_2_CORE_PROFILE);
     glutInitWindowSize(instance->m_width, instance->m_height);
-    glutInitWindowPosition(350, 450);
+    int screenW = glutGet(GLUT_SCREEN_WIDTH);
+    int screenH = glutGet(GLUT_SCREEN_HEIGHT);
+    glutInitWindowPosition((screenW - instance->m_width) / 2, (screenH - instance->m_height) / 2);
     glutCreateWindow(instance->m_title.c_str());
 
     IMGUI_CHECKVERSION();
@@ -61,12 +63,20 @@ void Minecraft::create(int argc, char** argv) {
 void Minecraft::setup() {
     m_renderer = std::make_unique<Renderer>();
 
-    float one = 256.0f / 16 / 256.0f;
+    float one = 1.f / 16;
+    float two = one * 2;
+    float three = one * 3;
     float vertices[] = {
-        0.0f, 0.0f, 1.0f, 0.0f, one, // top left
+        // y+
+        0.0f, 1.0f, 0.0f, 0.0f, one, // top left
         0.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom left
-        1.0f, 0.0f, 1.0f, one, one, // top right
-        1.0f, 1.0f, 1.0f, one, 0.0f // bottom right
+        1.0f, 1.0f, 0.0f, one, one, // top right
+        1.0f, 1.0f, 1.0f, one, 0.0f, // bottom right
+        // y-
+        0.0f, 0.0f, 0.0f, two, three, // top left
+        0.0f, 0.0f, 1.0f, two, two, // bottom left
+        1.0f, 0.0f, 0.0f, three, three, // top right
+        1.0f, 0.0f, 1.0f, three, two // bottom right
     };
 
     m_vbo = std::make_unique<VertexBuffer>(&vertices, sizeof(vertices));
@@ -76,8 +86,8 @@ void Minecraft::setup() {
     layout.push<float>(2);
     m_vao->addBuffer(*m_vbo, layout);
 
-    unsigned int indices[6] = { 0, 1, 2, 3, 1, 2 };
-    m_indexBuffer = std::make_unique<IndexBuffer>(indices, 6);
+    unsigned int indices[] = { 0, 1, 2, 3, 1, 2, 4, 5, 6, 7, 5, 6 };
+    m_indexBuffer = std::make_unique<IndexBuffer>(indices, 12);
 
     auto vertexS = Shader("../res/shaders/shader.vert", ShaderType::VERTEX);
     auto fragS = Shader("../res/shaders/shader.frag", ShaderType::FRAGMENT);
@@ -150,6 +160,9 @@ void Minecraft::onPassiveMotion(int x, int y) {
 
     yaw += xOffset * sensibility;
     pitch += yOffset * sensibility;
+
+    if (pitch > 89.0f) { pitch = 89.0f; }
+    if (pitch < -89.0f) { pitch = -89.0f; }
 
     glm::vec3 direction;
     direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
