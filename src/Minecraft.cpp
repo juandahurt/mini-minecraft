@@ -68,8 +68,8 @@ void Minecraft::setup() {
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
-    auto instances = m_worldGenerator->generate();
-    for (auto& [dir, positions] : instances) {
+    m_worldGenerator->generate();
+    for (auto& [dir, positions] : m_worldGenerator->getInstances()) {
         FaceBatch batch;
         auto face = Face(dir, Material::EARTH);
 

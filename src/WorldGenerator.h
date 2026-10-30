@@ -118,10 +118,16 @@ class WorldGenerator {
 private:
     int m_width;
     int m_height;
+
+    FaceInstances m_instances;
+
+    void addBlock(glm::vec3 position, Material material);
 public:
     WorldGenerator(int width, int height);
 
-    FaceInstances generate() const;
+    void generate();
+
+    const FaceInstances& getInstances() const;
 };
 
 
