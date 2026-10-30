@@ -13,6 +13,7 @@
 #include "imgui_impl_opengl3.h"
 #include "Shader.h"
 #include "Texture.h"
+#include "Vertex.h"
 #include "VertexBufferLayout.h"
 
 Minecraft::Minecraft()
@@ -63,32 +64,33 @@ void Minecraft::create(int argc, char** argv) {
 
 void Minecraft::setup() {
     m_renderer = std::make_unique<Renderer>();
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
 
-    float one = 1.f / 16;
-    float two = one * 2;
-    float three = one * 3;
-    float vertices[] = {
-        // y+
-        0.0f, 1.0f, 0.0f, 0.0f, one, // top left
-        0.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom left
-        1.0f, 1.0f, 0.0f, one, one, // top right
-        1.0f, 1.0f, 1.0f, one, 0.0f, // bottom right
-    };
+    auto instances = m_worldGenerator->generate();
+    for (auto& [dir, positions] : instances) {
+        FaceBatch batch;
+        auto face = Face(dir, Material::EARTH);
 
-    m_vbo = std::make_unique<VertexBuffer>(&vertices, sizeof(vertices));
-    m_vao = std::make_unique<VertexArray>();
-    auto layout = VertexBufferLayout();
-    layout.push<float>(3);
-    layout.push<float>(2);
-    m_vao->addBuffer(*m_vbo, layout);
+        auto geomLayout = VertexBufferLayout();
+        geomLayout.push<float>(3);
+        geomLayout.push<float>(2);
+        batch.geometryVBO = std::make_unique<VertexBuffer>(face.vertices.data(), face.vertices.size() * sizeof(Vertex));
 
-    auto worldLayout = VertexBufferLayout();
-    worldLayout.push<float>(3);
-    float world[] = { 1.0f,0,0, 2,0,0, 3,0,0};
-    m_worldVBO = std::make_unique<VertexBuffer>(&world, sizeof(world));
-    m_vao->addInstancedBuffer(*m_worldVBO, worldLayout);
+        auto instanceLayout = VertexBufferLayout();
+        instanceLayout.push<float>(3);
+        batch.instanceVBO = std::make_unique<VertexBuffer>(positions.data(), positions.size() * sizeof(glm::vec3));
 
-    unsigned int indices[] = { 0, 1, 2, 3, 1, 2 };
+        batch.vao = std::make_unique<VertexArray>();
+        batch.vao->addBuffer(*batch.geometryVBO, geomLayout);
+        batch.vao->addInstancedBuffer(*batch.instanceVBO, instanceLayout);
+        batch.instanceCount = positions.size();
+
+        m_batches.emplace(dir, std::move(batch));
+    }
+
+    unsigned int indices[] = { 2, 0, 1, 3, 2, 1 };
     m_indexBuffer = std::make_unique<IndexBuffer>(indices, 6);
 
     auto vertexS = Shader("../res/shaders/shader.vert", ShaderType::VERTEX);
@@ -210,9 +212,10 @@ void Minecraft::onDisplay() {
     m_program->setUniformMat4("u_mvp", mvp);
     m_program->setUniformInt("u_texture", 0);
 
-    // m_vao->bind();
-    // m_renderer->draw(*m_indexBuffer, *m_vbo, *m_program);
-    m_renderer->drawInstanced(*m_indexBuffer, *m_vbo, *m_program, 3);
+    for (auto& [dir, batch] : m_batches) {
+        batch.vao->bind();
+        m_renderer->drawInstanced(*m_indexBuffer, *batch.geometryVBO, *m_program, batch.instanceCount);
+    }
 
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGLUT_NewFrame();
