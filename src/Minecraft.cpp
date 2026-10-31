@@ -40,10 +40,9 @@ void Minecraft::create(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_3_2_CORE_PROFILE);
     glutInitWindowSize(instance->m_width, instance->m_height);
-    int screenW = glutGet(GLUT_SCREEN_WIDTH);
-    int screenH = glutGet(GLUT_SCREEN_HEIGHT);
-    glutInitWindowPosition((screenW - instance->m_width) / 2, (screenH - instance->m_height) / 2);
     glutCreateWindow(instance->m_title.c_str());
+
+    glutFullScreen();
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -67,6 +66,7 @@ void Minecraft::setup() {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
+    glEnable(GL_DEPTH_TEST);
 
     m_worldGenerator->generate();
     for (auto& [dir, positions] : m_worldGenerator->getInstances()) {

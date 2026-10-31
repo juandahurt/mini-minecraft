@@ -7,11 +7,11 @@
 WorldGenerator::WorldGenerator(int width, int height): m_width(width), m_height(height) {}
 
 void WorldGenerator::generate() {
-    addBlock({0, 0, 0}, Material::EARTH);
-    addBlock({3, 0, 0}, Material::EARTH);
-    addBlock({0, 2, 0}, Material::EARTH);
-    addBlock({0, 0, 1}, Material::EARTH);
-    addBlock({1, 0, 0}, Material::EARTH);
+    for (int i = 0; i < 20; i++) {
+        for (int j = 0; j < 20; j++) {
+            addBlock({i, 0, j}, Material::EARTH);
+        }
+    }
 }
 
 void WorldGenerator::addBlock(glm::vec3 position, Material material) {
