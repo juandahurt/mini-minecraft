@@ -1,5 +1,6 @@
 #ifndef MINI_MINECRAFT_WINDOW_H
 #define MINI_MINECRAFT_WINDOW_H
+#include <map>
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -9,6 +10,7 @@
 #include "Renderer.h"
 #include "Texture.h"
 #include "VertexArray.h"
+#include "WorldGenerator.h"
 
 class Minecraft {
 private:
@@ -16,9 +18,15 @@ private:
     int m_width;
     int m_height;
 
+    struct FaceBatch {
+        std::unique_ptr<VertexArray> vao;
+        std::unique_ptr<VertexBuffer> geometryVBO;
+        std::unique_ptr<VertexBuffer> instanceVBO;
+        unsigned int instanceCount;
+    };
+
     std::unique_ptr<Renderer> m_renderer;
-    std::unique_ptr<VertexArray> m_vao;
-    std::unique_ptr<VertexBuffer> m_vbo;
+    std::map<FaceDirection, FaceBatch> m_batches;
     std::unique_ptr<IndexBuffer> m_indexBuffer;
     std::unique_ptr<ShaderProgram> m_program;
     std::unique_ptr<Texture> m_texture;
@@ -27,6 +35,7 @@ private:
     glm::mat4 m_projection;
 
     std::unique_ptr<Camera> m_camera;
+    std::unique_ptr<WorldGenerator> m_worldGenerator;
 
     std::unordered_set<unsigned char> m_pressedKeys;
 

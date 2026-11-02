@@ -24,10 +24,24 @@ void VertexArray::addBuffer(const VertexBuffer &vb, const VertexBufferLayout &la
     vb.bind();
     const auto& elements = layout.getElements();
     unsigned int offset = 0;
-    for (int i = 0; i < elements.size(); i++) {
-        const auto& element = elements[i];
-        GLCall(glEnableVertexAttribArray(i));
-        GLCall(glVertexAttribPointer(i, element.count, element.type, element.normalized, layout.getStride(), (const void*)offset));
+    for (const auto& element : elements) {
+        GLCall(glEnableVertexAttribArray(m_attribIndex));
+        GLCall(glVertexAttribPointer(m_attribIndex, element.count, element.type, element.normalized, layout.getStride(), (const void*)offset));
         offset += element.count * VertexBufferElement::getSize(element.type);
+        m_attribIndex++;
+    }
+}
+
+void VertexArray::addInstancedBuffer(const VertexBuffer &vb, const VertexBufferLayout &layout) {
+    bind();
+    vb.bind();
+    const auto& elements = layout.getElements();
+    unsigned int offset = 0;
+    for (const auto& element : elements) {
+        GLCall(glEnableVertexAttribArray(m_attribIndex));
+        GLCall(glVertexAttribPointer(m_attribIndex, element.count, element.type, element.normalized, layout.getStride(), (const void*)offset));
+        GLCall(glVertexAttribDivisor(m_attribIndex, 1));
+        offset += element.count * VertexBufferElement::getSize(element.type);
+        m_attribIndex++;
     }
 }
