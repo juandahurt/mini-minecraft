@@ -10,6 +10,7 @@
 #include "Renderer.h"
 #include "Texture.h"
 #include "VertexArray.h"
+#include "World.h"
 #include "WorldGenerator.h"
 
 class Minecraft {
@@ -35,7 +36,7 @@ private:
     glm::mat4 m_projection;
 
     std::unique_ptr<Camera> m_camera;
-    std::unique_ptr<WorldGenerator> m_worldGenerator;
+    std::unique_ptr<World> m_world;
 
     std::unordered_set<unsigned char> m_pressedKeys;
 

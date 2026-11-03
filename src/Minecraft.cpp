@@ -8,6 +8,7 @@
 #include <OpenGL/gl3.h>
 #endif
 
+#include "Face.h"
 #include "imgui.h"
 #include "imgui_impl_glut.h"
 #include "imgui_impl_opengl3.h"
@@ -22,7 +23,7 @@ Minecraft::Minecraft()
     , m_height(720)
     , m_translation(0.0f, 0.0f, 0.0f) {
     m_camera = std::make_unique<Camera>();
-    m_worldGenerator = std::make_unique<WorldGenerator>(4, 4);
+    m_world = std::make_unique<World>(glm::ivec2(6, 6));
 }
 
 Minecraft::~Minecraft() {
@@ -68,8 +69,8 @@ void Minecraft::setup() {
     glFrontFace(GL_CCW);
     glEnable(GL_DEPTH_TEST);
 
-    m_worldGenerator->generate();
-    for (auto& [dir, positions] : m_worldGenerator->getInstances()) {
+    m_world->load();
+    for (auto& [dir, positions] : m_world->getFaceInstances()) {
         FaceBatch batch;
         auto face = Face(dir, Material::EARTH);
 
