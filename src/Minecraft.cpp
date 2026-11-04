@@ -70,9 +70,10 @@ void Minecraft::setup() {
     glEnable(GL_DEPTH_TEST);
 
     m_world->load();
-    for (auto& [dir, positions] : m_world->getFaceInstances()) {
+    for (auto& [key, positions] : m_world->getFaceInstances()) {
+        auto [dir, material] = key;
         FaceBatch batch;
-        auto face = Face(dir, Material::EARTH);
+        auto face = Face(dir, material);
 
         auto geomLayout = VertexBufferLayout();
         geomLayout.push<float>(3);
@@ -88,7 +89,7 @@ void Minecraft::setup() {
         batch.vao->addInstancedBuffer(*batch.instanceVBO, instanceLayout);
         batch.instanceCount = positions.size();
 
-        m_batches.emplace(dir, std::move(batch));
+        m_batches.emplace(key, std::move(batch));
     }
 
     unsigned int indices[] = { 2, 0, 1, 3, 2, 1 };
@@ -232,8 +233,8 @@ void Minecraft::onDisplay() {
         if (ImGui::SliderFloat("Camera Speed", &speed, 0.1f, 0.6f))
             m_camera->setSpeed(speed);
         ImGui::Separator();
-        for (auto& [dir, batch] : m_batches) {
-            ImGui::Text("Dir %d: %d faces", (int)dir, batch.instanceCount);
+        for (auto& [key, batch] : m_batches) {
+            ImGui::Text("Dir %d Mat %d: %d faces", (int)key.first, (int)key.second, batch.instanceCount);
         }
         ImGui::End();
     }

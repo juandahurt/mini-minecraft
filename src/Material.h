@@ -6,7 +6,9 @@
 #define MINI_MINECRAFT_MATERIAL_H
 
 enum Material {
-    EARTH
+    GRASS,
+    DIRT,
+    STONE
 };
 
 #endif //MINI_MINECRAFT_MATERIAL_H

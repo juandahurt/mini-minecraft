@@ -72,7 +72,7 @@ struct Face {
     std::tuple<float, float> textCoordNormPositionInAtlas(Material material, FaceDirection direction, float tileSize) {
         // the position on the atlas
         float posInAtlas[2];
-        if (material == EARTH) {
+        if (material == GRASS) {
             if (direction == Y_UP) {
                 posInAtlas[0] = 0;
                 posInAtlas[1] = 0;
@@ -85,6 +85,14 @@ struct Face {
                 posInAtlas[0] = 3;
                 posInAtlas[1] = 0;
             }
+        }
+        if (material == DIRT) {
+            posInAtlas[0] = 2;
+            posInAtlas[1] = 0;
+        }
+        if (material == STONE) {
+            posInAtlas[0] = 1;
+            posInAtlas[1] = 0;
         }
         return std::make_tuple(posInAtlas[0] * tileSize, posInAtlas[1] * tileSize);
     }

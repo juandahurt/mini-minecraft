@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 
 #include "Camera.h"
+#include "Material.h"
 #include "Renderer.h"
 #include "Texture.h"
 #include "VertexArray.h"
@@ -27,7 +28,7 @@ private:
     };
 
     std::unique_ptr<Renderer> m_renderer;
-    std::map<FaceDirection, FaceBatch> m_batches;
+    std::map<std::pair<FaceDirection, Material>, FaceBatch> m_batches;
     std::unique_ptr<IndexBuffer> m_indexBuffer;
     std::unique_ptr<ShaderProgram> m_program;
     std::unique_ptr<Texture> m_texture;
