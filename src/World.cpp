@@ -22,10 +22,27 @@ void World::load() {
                     }
                 }
             }
-            chunk.buildFaceInstances();
             m_chunks.push_back(std::move(chunk));
         }
     }
+
+    for (int cx = 0; cx < m_worldSizeInChunks.x; cx++) {
+        for (int cz = 0; cz < m_worldSizeInChunks.y; cz++) {
+            const Chunk* xPos = chunkAt(cx + 1, cz);
+            const Chunk* xNeg = chunkAt(cx - 1, cz);
+            const Chunk* zPos = chunkAt(cx, cz + 1);
+            const Chunk* zNeg = chunkAt(cx, cz - 1);
+            m_chunks[cx * m_worldSizeInChunks.y + cz]
+                .buildFaceInstances(xPos, xNeg, zPos, zNeg);
+        }
+    }
+}
+
+const Chunk* World::chunkAt(int cx, int cz) const {
+    if (cx < 0 || cx >= m_worldSizeInChunks.x || cz < 0 || cz >= m_worldSizeInChunks.y) {
+        return nullptr;
+    }
+    return &m_chunks[cx * m_worldSizeInChunks.y + cz];
 }
 
 const std::vector<Chunk>& World::getChunks() const {

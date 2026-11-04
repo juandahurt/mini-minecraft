@@ -13,6 +13,8 @@ class World {
 private:
     glm::ivec2 m_worldSizeInChunks;
     std::vector<Chunk> m_chunks;
+
+    const Chunk* chunkAt(int cx, int cz) const;
 public:
     World(glm::ivec2 worldSizeInChunks);
 

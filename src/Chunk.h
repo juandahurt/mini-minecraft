@@ -27,8 +27,10 @@ public:
     Chunk(glm::ivec2 position);
 
     void addBlock(glm::ivec3 position, Material material);
-    void buildFaceInstances();
+    void buildFaceInstances(const Chunk* xPos, const Chunk* xNeg,
+                            const Chunk* zPos, const Chunk* zNeg);
 
+    bool hasBlockAt(glm::ivec3 localPos) const;
     const FaceInstances& getFaceInstances() const;
 };
 
