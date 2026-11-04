@@ -41,7 +41,14 @@ add_executable(mini_minecraft main.cpp
         src/WorldGenerator.cpp
         src/WorldGenerator.h
         src/Vertex.cpp
-        src/Vertex.h)
+        src/Vertex.h
+        src/Chunk.cpp
+        src/Chunk.h
+        src/Face.h
+        src/World.cpp
+        src/World.h
+        src/Material.h
+        src/FaceDirection.h)
 
 target_include_directories(mini_minecraft PRIVATE
         ${OPENGL_INCLUDE_DIR}
