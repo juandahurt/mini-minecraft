@@ -24,6 +24,7 @@ Minecraft::Minecraft()
     , m_translation(0.0f, 0.0f, 0.0f) {
     m_camera = std::make_unique<Camera>();
     m_world = std::make_unique<World>(glm::ivec2(10, 10));
+    m_debugMode = false;
 }
 
 Minecraft::~Minecraft() {
@@ -81,6 +82,10 @@ void Minecraft::setup() {
 
     m_texture = std::make_unique<Texture>("../res/textures/atlas.png");
     m_texture->bind(0);
+
+    if (m_debugMode) {
+        hideMousePointer();
+    }
 }
 
 void Minecraft::rebuildBatches() {
@@ -154,6 +159,8 @@ void Minecraft::onReshape(int w, int h) {
 void Minecraft::onMouse(int button, int state, int x, int y) {}
 void Minecraft::onMotion(int x, int y) {}
 void Minecraft::onPassiveMotion(int x, int y) {
+    if (m_debugMode) { return; } // camera movement disabled on debug mode
+    std::cout << m_debugMode << std::endl;
     static float lastX = x;
     static float lastY = y;
     static float yaw = 90;
@@ -191,6 +198,14 @@ void Minecraft::onKeyboard(unsigned char key, int x, int y) {
 }
 
 void Minecraft::onKeyboardUp(unsigned char key, int x, int y) {
+    switch ((int)key) {
+        case 27:
+            m_debugMode = !m_debugMode;
+            if (m_debugMode) { showMousePointer(); }
+            else { hideMousePointer(); }
+            break;
+        default: printf(":)");
+    }
     m_pressedKeys.erase(key);
 }
 
@@ -234,9 +249,8 @@ void Minecraft::onDisplay() {
     ImGui_ImplGLUT_NewFrame();
     ImGui::NewFrame();
 
-    static bool showDebug = true;
-    if (showDebug) {
-        ImGui::Begin("Debug", &showDebug, ImGuiWindowFlags_AlwaysAutoResize);
+    if (m_debugMode) {
+        ImGui::Begin("Debug", &m_debugMode, ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
         ImGui::Text("OpenGL: %s", glGetString(GL_VERSION));
         ImGui::Text("GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
@@ -274,4 +288,13 @@ void Minecraft::onDisplay() {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     glutSwapBuffers();
+}
+
+
+void Minecraft::hideMousePointer() {
+    glutSetCursor(GLUT_CURSOR_NONE);
+}
+
+void Minecraft::showMousePointer() {
+    glutSetCursor(GLUT_CURSOR_INHERIT);
 }
