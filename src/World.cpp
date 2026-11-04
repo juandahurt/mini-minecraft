@@ -7,9 +7,10 @@
 World::World(glm::ivec2 worldSizeInChunks): m_worldSizeInChunks(worldSizeInChunks) {}
 
 void World::load() {
+    m_chunks.reserve(m_worldSizeInChunks.x * m_worldSizeInChunks.y);
     for (int cx = 0; cx < m_worldSizeInChunks.x; cx++) {
         for (int cz = 0; cz < m_worldSizeInChunks.y; cz++) {
-            auto chunk = Chunk({cx, cz});
+            Chunk chunk({cx, cz});
             for (int i = 0; i < CHUNK_SIZE; i++) {
                 for (int j = 0; j < CHUNK_SIZE; j++) {
                     auto height = 10;
@@ -21,19 +22,12 @@ void World::load() {
                     }
                 }
             }
-
             chunk.buildFaceInstances();
-            for (auto& [dir, instances] : chunk.getFaceInstances()) {
-                m_faceInstances[dir].insert(m_faceInstances[dir].end(), instances.begin(), instances.end());
-            }
+            m_chunks.push_back(std::move(chunk));
         }
     }
 }
 
-FaceInstances World::getFaceInstances() const {
-    return m_faceInstances;
-}
-
-std::vector<Chunk> World::getChunks() const {
+const std::vector<Chunk>& World::getChunks() const {
     return m_chunks;
 }

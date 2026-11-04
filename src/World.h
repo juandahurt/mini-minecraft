@@ -13,14 +13,12 @@ class World {
 private:
     glm::ivec2 m_worldSizeInChunks;
     std::vector<Chunk> m_chunks;
-    FaceInstances m_faceInstances;
 public:
     World(glm::ivec2 worldSizeInChunks);
 
     void load();
 
-    std::vector<Chunk> getChunks() const;
-    FaceInstances getFaceInstances() const;
+    const std::vector<Chunk>& getChunks() const;
 };
 
 

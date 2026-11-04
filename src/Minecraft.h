@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <unordered_set>
+#include <vector>
 #include <glm/glm.hpp>
 
 #include "Camera.h"
@@ -28,7 +29,7 @@ private:
     };
 
     std::unique_ptr<Renderer> m_renderer;
-    std::map<std::pair<FaceDirection, Material>, FaceBatch> m_batches;
+    std::vector<std::map<std::pair<FaceDirection, Material>, FaceBatch>> m_chunkBatches;
     std::unique_ptr<IndexBuffer> m_indexBuffer;
     std::unique_ptr<ShaderProgram> m_program;
     std::unique_ptr<Texture> m_texture;

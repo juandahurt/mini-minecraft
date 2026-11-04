@@ -29,7 +29,7 @@ public:
     void addBlock(glm::ivec3 position, Material material);
     void buildFaceInstances();
 
-    FaceInstances getFaceInstances();
+    const FaceInstances& getFaceInstances() const;
 };
 
 

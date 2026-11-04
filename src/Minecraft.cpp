@@ -70,26 +70,30 @@ void Minecraft::setup() {
     glEnable(GL_DEPTH_TEST);
 
     m_world->load();
-    for (auto& [key, positions] : m_world->getFaceInstances()) {
-        auto [dir, material] = key;
-        FaceBatch batch;
-        auto face = Face(dir, material);
+    const auto& chunks = m_world->getChunks();
+    m_chunkBatches.resize(chunks.size());
+    for (size_t i = 0; i < chunks.size(); ++i) {
+        for (const auto& [key, positions] : chunks[i].getFaceInstances()) {
+            auto [dir, material] = key;
+            FaceBatch batch;
+            auto face = Face(dir, material);
 
-        auto geomLayout = VertexBufferLayout();
-        geomLayout.push<float>(3);
-        geomLayout.push<float>(2);
-        batch.geometryVBO = std::make_unique<VertexBuffer>(face.vertices.data(), face.vertices.size() * sizeof(Vertex));
+            auto geomLayout = VertexBufferLayout();
+            geomLayout.push<float>(3);
+            geomLayout.push<float>(2);
+            batch.geometryVBO = std::make_unique<VertexBuffer>(face.vertices.data(), face.vertices.size() * sizeof(Vertex));
 
-        auto instanceLayout = VertexBufferLayout();
-        instanceLayout.push<float>(3);
-        batch.instanceVBO = std::make_unique<VertexBuffer>(positions.data(), positions.size() * sizeof(glm::vec3));
+            auto instanceLayout = VertexBufferLayout();
+            instanceLayout.push<float>(3);
+            batch.instanceVBO = std::make_unique<VertexBuffer>(positions.data(), positions.size() * sizeof(glm::vec3));
 
-        batch.vao = std::make_unique<VertexArray>();
-        batch.vao->addBuffer(*batch.geometryVBO, geomLayout);
-        batch.vao->addInstancedBuffer(*batch.instanceVBO, instanceLayout);
-        batch.instanceCount = positions.size();
+            batch.vao = std::make_unique<VertexArray>();
+            batch.vao->addBuffer(*batch.geometryVBO, geomLayout);
+            batch.vao->addInstancedBuffer(*batch.instanceVBO, instanceLayout);
+            batch.instanceCount = positions.size();
 
-        m_batches.emplace(key, std::move(batch));
+            m_chunkBatches[i].emplace(key, std::move(batch));
+        }
     }
 
     unsigned int indices[] = { 2, 0, 1, 3, 2, 1 };
@@ -214,9 +218,11 @@ void Minecraft::onDisplay() {
     m_program->setUniformMat4("u_mvp", mvp);
     m_program->setUniformInt("u_texture", 0);
 
-    for (auto& [dir, batch] : m_batches) {
-        batch.vao->bind();
-        m_renderer->drawInstanced(*m_indexBuffer, *batch.geometryVBO, *m_program, batch.instanceCount);
+    for (auto& chunkBatches : m_chunkBatches) {
+        for (auto& [key, batch] : chunkBatches) {
+            batch.vao->bind();
+            m_renderer->drawInstanced(*m_indexBuffer, *batch.geometryVBO, *m_program, batch.instanceCount);
+        }
     }
 
     ImGui_ImplOpenGL3_NewFrame();
@@ -233,9 +239,14 @@ void Minecraft::onDisplay() {
         if (ImGui::SliderFloat("Camera Speed", &speed, 0.1f, 0.6f))
             m_camera->setSpeed(speed);
         ImGui::Separator();
-        for (auto& [key, batch] : m_batches) {
-            ImGui::Text("Dir %d Mat %d: %d faces", (int)key.first, (int)key.second, batch.instanceCount);
+        unsigned int totalFaces = 0;
+        for (const auto& chunkBatches : m_chunkBatches) {
+            for (const auto& [key, batch] : chunkBatches) {
+                totalFaces += batch.instanceCount;
+            }
         }
+        ImGui::Text("Chunks: %zu", m_chunkBatches.size());
+        ImGui::Text("Total faces: %u", totalFaces);
         ImGui::End();
     }
 

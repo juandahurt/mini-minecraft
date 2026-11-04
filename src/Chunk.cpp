@@ -31,6 +31,6 @@ void Chunk::buildFaceInstances() {
     }
 }
 
-FaceInstances Chunk::getFaceInstances() {
+const FaceInstances& Chunk::getFaceInstances() const {
     return m_instances;
 }
