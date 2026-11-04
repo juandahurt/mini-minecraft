@@ -9,7 +9,7 @@
 Chunk::Chunk(glm::ivec2 position) : m_position(position) {}
 
 void Chunk::addBlock(glm::ivec3 position, Material material) {
-    m_blockPositions[position + CHUNK_SIZE * glm::ivec3(m_position.x, 0, m_position.y)] = material;
+    m_blockPositions[position] = material;
 }
 
 void Chunk::buildFaceInstances() {
@@ -21,10 +21,11 @@ void Chunk::buildFaceInstances() {
         {Z_UP,   { 0,  0,  1}},
         {Z_DOWN, { 0,  0, -1}},
     };
+    const glm::ivec3 worldOffset = CHUNK_SIZE * glm::ivec3(m_position.x, 0, m_position.y);
     for (auto& [pos, material]: m_blockPositions) {
         for (auto& [dir, offset]: neighbours) {
             if (!m_blockPositions.contains(pos + offset)) {
-                m_instances[{dir, material}].push_back(glm::vec3(pos));
+                m_instances[{dir, material}].push_back(glm::vec3(pos + worldOffset));
             }
         }
     }
