@@ -10,6 +10,7 @@ add_compile_definitions(GL_SILENCE_DEPRECATION)
 set(CMAKE_CXX_STANDARD 20)
 set(IMGUI_DIR vendor/imgui)
 set(STB_DIR vendor/stb)
+set(FASTNOISE_DIR vendor/FastNoiseLite)
 
 add_executable(mini_minecraft main.cpp
         src/Minecraft.cpp
@@ -56,6 +57,7 @@ target_include_directories(mini_minecraft PRIVATE
         ${IMGUI_DIR}
         ${IMGUI_DIR}/backends
         ${STB_DIR}
+        ${FASTNOISE_DIR}
 )
 
 target_link_libraries(mini_minecraft PRIVATE "-framework OpenGL -framework GLUT" glm::glm)

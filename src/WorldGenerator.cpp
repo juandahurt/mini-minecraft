@@ -1,29 +1,22 @@
-// //
-// // Created by aureliano on 28/10/26.
-// //
-//
-// #include "WorldGenerator.h"
-//
-// WorldGenerator::WorldGenerator(int width, int height): m_width(width), m_height(height) {}
-//
-// void WorldGenerator::generate() {
-//     for (int i = 0; i < 20; i++) {
-//         for (int j = 0; j < 20; j++) {
-//             addBlock({i, 0, j}, Material::EARTH);
-//         }
-//     }
-// }
-//
-// void WorldGenerator::addBlock(glm::vec3 position, Material material) {
-//     // TODO: use material
-//     m_instances[Y_UP].push_back(position);
-//     m_instances[Y_DOWN].push_back(position);
-//     m_instances[X_UP].push_back(position);
-//     m_instances[X_DOWN].push_back(position);
-//     m_instances[Z_UP].push_back(position);
-//     m_instances[Z_DOWN].push_back(position);
-// }
-//
-// const FaceInstances &WorldGenerator::getInstances() const {
-//     return m_instances;
-// }
+#include "WorldGenerator.h"
+
+WorldGenerator::WorldGenerator() {
+    m_noise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
+    m_noise.SetFractalType(FastNoiseLite::FractalType_FBm);
+    apply();
+}
+
+WorldGenerator::Params& WorldGenerator::params() {
+    return m_params;
+}
+
+void WorldGenerator::apply() {
+    m_noise.SetSeed(m_params.seed);
+    m_noise.SetFrequency(m_params.frequency);
+    m_noise.SetFractalOctaves(m_params.octaves);
+}
+
+int WorldGenerator::heightAt(int worldX, int worldZ) const {
+    float n = m_noise.GetNoise((float)worldX, (float)worldZ);
+    return m_params.baseHeight + static_cast<int>(n * m_params.amplitude);
+}

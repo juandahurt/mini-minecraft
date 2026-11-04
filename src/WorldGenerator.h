@@ -1,32 +1,29 @@
-// //
-// // Created by aureliano on 28/10/26.
-// //
-//
-// #ifndef MINI_MINECRAFT_WORLDGENERATOR_H
-// #define MINI_MINECRAFT_WORLDGENERATOR_H
-//
-// #include <map>
-// #include <vector>
-// #include <glm/vec3.hpp>
-// #include "Vertex.h"
-//
+#ifndef MINI_MINECRAFT_WORLDGENERATOR_H
+#define MINI_MINECRAFT_WORLDGENERATOR_H
 
-//
-// // face direction: position
-// using FaceInstances = std::map<FaceDirection, std::vector<glm::vec3>>;
-//
-// class WorldGenerator {
-// private:
-//     FaceInstances m_instances;
-//
-//     void addBlock(glm::vec3 position, Material material);
-// public:
-//     WorldGenerator(glm::vec2 chunkSize);
-//
-//     void generate();
-//
-//     const FaceInstances& getInstances() const;
-// };
-//
-//
-// #endif //MINI_MINECRAFT_WORLDGENERATOR_H
+#include "FastNoiseLite.h"
+
+class WorldGenerator {
+public:
+    struct Params {
+        float frequency = 0.02f;
+        int octaves = 4;
+        int seed = 1337;
+        int baseHeight = 16;
+        int amplitude = 8;
+    };
+
+private:
+    FastNoiseLite m_noise;
+    Params m_params;
+
+public:
+    WorldGenerator();
+
+    Params& params();
+    void apply();
+
+    int heightAt(int worldX, int worldZ) const;
+};
+
+#endif //MINI_MINECRAFT_WORLDGENERATOR_H

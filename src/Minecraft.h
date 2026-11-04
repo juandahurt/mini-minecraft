@@ -43,6 +43,7 @@ private:
     std::unordered_set<unsigned char> m_pressedKeys;
 
     void setup();
+    void rebuildBatches();
 
 public:
     Minecraft();

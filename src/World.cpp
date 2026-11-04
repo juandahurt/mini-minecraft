@@ -13,7 +13,9 @@ void World::load() {
             Chunk chunk({cx, cz});
             for (int i = 0; i < CHUNK_SIZE; i++) {
                 for (int j = 0; j < CHUNK_SIZE; j++) {
-                    auto height = 10;
+                    int worldX = cx * CHUNK_SIZE + i;
+                    int worldZ = cz * CHUNK_SIZE + j;
+                    int height = m_generator.heightAt(worldX, worldZ);
                     for (int y = 0; y < height; y++) {
                         float alpha = (float)y / (float)height;
                         Material m = y == height - 1 ? Material::GRASS : Material::DIRT;
@@ -43,6 +45,15 @@ const Chunk* World::chunkAt(int cx, int cz) const {
         return nullptr;
     }
     return &m_chunks[cx * m_worldSizeInChunks.y + cz];
+}
+
+void World::regenerate() {
+    m_chunks.clear();
+    load();
+}
+
+WorldGenerator& World::generator() {
+    return m_generator;
 }
 
 const std::vector<Chunk>& World::getChunks() const {
