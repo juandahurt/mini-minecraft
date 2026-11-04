@@ -70,6 +70,21 @@ void Minecraft::setup() {
     glEnable(GL_DEPTH_TEST);
 
     m_world->load();
+    rebuildBatches();
+
+    unsigned int indices[] = { 2, 0, 1, 3, 2, 1 };
+    m_indexBuffer = std::make_unique<IndexBuffer>(indices, 6);
+
+    auto vertexS = Shader("../res/shaders/shader.vert", ShaderType::VERTEX);
+    auto fragS = Shader("../res/shaders/shader.frag", ShaderType::FRAGMENT);
+    m_program = std::make_unique<ShaderProgram>(vertexS, fragS);
+
+    m_texture = std::make_unique<Texture>("../res/textures/atlas.png");
+    m_texture->bind(0);
+}
+
+void Minecraft::rebuildBatches() {
+    m_chunkBatches.clear();
     const auto& chunks = m_world->getChunks();
     m_chunkBatches.resize(chunks.size());
     for (size_t i = 0; i < chunks.size(); ++i) {
@@ -95,16 +110,6 @@ void Minecraft::setup() {
             m_chunkBatches[i].emplace(key, std::move(batch));
         }
     }
-
-    unsigned int indices[] = { 2, 0, 1, 3, 2, 1 };
-    m_indexBuffer = std::make_unique<IndexBuffer>(indices, 6);
-
-    auto vertexS = Shader("../res/shaders/shader.vert", ShaderType::VERTEX);
-    auto fragS = Shader("../res/shaders/shader.frag", ShaderType::FRAGMENT);
-    m_program = std::make_unique<ShaderProgram>(vertexS, fragS);
-
-    m_texture = std::make_unique<Texture>("../res/textures/atlas.png");
-    m_texture->bind(0);
 }
 
 // Wrappers
@@ -247,6 +252,21 @@ void Minecraft::onDisplay() {
         }
         ImGui::Text("Chunks: %zu", m_chunkBatches.size());
         ImGui::Text("Total faces: %u", totalFaces);
+
+        if (ImGui::CollapsingHeader("Terrain", ImGuiTreeNodeFlags_DefaultOpen)) {
+            auto& p = m_world->generator().params();
+            bool dirty = false;
+            dirty |= ImGui::SliderFloat("Frequency", &p.frequency, 0.001f, 0.1f, "%.4f");
+            dirty |= ImGui::SliderInt("Octaves", &p.octaves, 1, 8);
+            dirty |= ImGui::SliderInt("Base height", &p.baseHeight, 0, 32);
+            dirty |= ImGui::SliderInt("Amplitude", &p.amplitude, 1, 32);
+            dirty |= ImGui::InputInt("Seed", &p.seed);
+            if (dirty) {
+                m_world->generator().apply();
+                m_world->regenerate();
+                rebuildBatches();
+            }
+        }
         ImGui::End();
     }
 
