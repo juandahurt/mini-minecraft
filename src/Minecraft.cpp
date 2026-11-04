@@ -23,7 +23,7 @@ Minecraft::Minecraft()
     , m_height(720)
     , m_translation(0.0f, 0.0f, 0.0f) {
     m_camera = std::make_unique<Camera>();
-    m_world = std::make_unique<World>(glm::ivec2(6, 6));
+    m_world = std::make_unique<World>(glm::ivec2(10, 10));
 }
 
 Minecraft::~Minecraft() {
@@ -39,7 +39,7 @@ void Minecraft::create(int argc, char** argv) {
     instance = std::make_unique<Minecraft>();
 
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_3_2_CORE_PROFILE);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH | GLUT_3_2_CORE_PROFILE);
     glutInitWindowSize(instance->m_width, instance->m_height);
     glutCreateWindow(instance->m_title.c_str());
 
@@ -203,7 +203,7 @@ void Minecraft::onUpdate() {
 }
 
 void Minecraft::onDisplay() {
-    m_renderer->clear(0.164, 0.53, 0.7, 1);
+    m_renderer->clear(0.464, 0.63, 0.97, 1);
 
     m_program->bind();
 
@@ -232,7 +232,9 @@ void Minecraft::onDisplay() {
         if (ImGui::SliderFloat("Camera Speed", &speed, 0.1f, 0.6f))
             m_camera->setSpeed(speed);
         ImGui::Separator();
-        ImGui::Text("Vertices: 3");
+        for (auto& [dir, batch] : m_batches) {
+            ImGui::Text("Dir %d: %d faces", (int)dir, batch.instanceCount);
+        }
         ImGui::End();
     }
 

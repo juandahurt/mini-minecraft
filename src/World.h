@@ -5,7 +5,8 @@
 #ifndef MINI_MINECRAFT_WORLD_H
 #define MINI_MINECRAFT_WORLD_H
 #include "Chunk.h"
-#include <glm/glm.hpp>
+
+#define CHUNK_SIZE 6
 
 
 class World {

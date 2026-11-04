@@ -18,10 +18,11 @@ using FaceInstances = std::map<FaceDirection, std::vector<glm::vec3>>;
 class Chunk {
 private:
     FaceInstances m_instances;
-    std::unordered_set<glm::vec3> m_blockPositions;
+    std::unordered_set<glm::ivec3> m_blockPositions;
+    glm::ivec2 m_position;
 
 public:
-    Chunk();
+    Chunk(glm::ivec2 position);
 
     void addBlock(glm::ivec3 position);
     void buildFaceInstances();

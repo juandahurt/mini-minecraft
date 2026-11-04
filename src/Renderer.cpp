@@ -16,7 +16,7 @@ void GLLogCall(const char* function, const char* file, const int line) {
 
 void Renderer::clear(float r, float g, float b, float a) {
     GLCall(glClearColor(r, g, b, a));
-    GLCall(glClear(GL_COLOR_BUFFER_BIT));
+    GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 }
 
 void Renderer::draw(const IndexBuffer &indexBuffer, const VertexBuffer &vertexBuffer, const ShaderProgram &shaderProgram) const {
