@@ -7,11 +7,12 @@
 
 Player::Player(glm::vec3 position, glm::vec3 box) : m_position(position), m_box(box) {
     m_speed = glm::vec3(0.0f, 0.0f, 0.0f);
+    m_gravity = glm::vec3(0.0f, -0.5f, 0.0f);
 }
 
 void Player::update() {
-    this->m_position += this->m_speed * 0.1f;
-    this->m_position.y -= 0.1;
+    m_speed.y += m_gravity.y * 0.1f;
+    m_position += m_speed * 0.1f;
 }
 
 glm::vec3 Player::getPosition() const {

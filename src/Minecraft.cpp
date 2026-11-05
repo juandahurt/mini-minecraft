@@ -234,6 +234,10 @@ void Minecraft::onPassiveMotion(int x, int y) {
 
 void Minecraft::onKeyboard(unsigned char key, int x, int y) {
     m_pressedKeys.insert(key);
+    if (key == 32) {
+        auto s = m_player->getSpeed();
+        m_player->setSpeed(s + glm::vec3(s.x, 2.1f, s.z));
+    }
 }
 
 void Minecraft::onKeyboardUp(unsigned char key, int x, int y) {
@@ -275,7 +279,11 @@ void Minecraft::onUpdate() {
     // axis-separated collision resolution. speed is never touched,
     // so gravity keeps accumulating even when standing on ground.
     m_player->setPosition(prevPos + glm::vec3(0.0f, delta.y, 0.0f));
-    if (playerCollides()) m_player->setPosition(prevPos);
+    if (playerCollides()) {
+        m_player->setPosition(prevPos);
+        auto s = m_player->getSpeed();
+        // m_player->setSpeed({s.x, 0, s.z});
+    }
     glm::vec3 afterY = m_player->getPosition();
 
     m_player->setPosition(afterY + glm::vec3(delta.x, 0.0f, 0.0f));

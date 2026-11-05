@@ -75,7 +75,6 @@ std::vector<glm::ivec3> Chunk::blocksOverlapping(const AABB& worldBox) const {
                 if (local.x < 0 || local.x >= CHUNK_SIZE) continue;
                 if (local.z < 0 || local.z >= CHUNK_SIZE) continue;
                 if (local.y < 0) continue;
-                std::cout << local.x << ' ' << local.y  <<  ' ' << local.z << std::endl;
                 if (hasBlockAt(local)) {
                     result.push_back({wx, wy, wz});
                 }
