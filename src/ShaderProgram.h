@@ -6,6 +6,7 @@
 #define MINI_MINECRAFT_SHADERPROGRAM_H
 #include "Shader.h"
 #include <glm/matrix.hpp>
+#include <glm/vec3.hpp>
 
 class ShaderProgram {
 private:
@@ -19,6 +20,7 @@ public:
 
     void setUniformMat4(const std::string& name, const glm::mat4& matrix);
     void setUniformInt(const std::string& name, int value);
+    void setUniformVec3(const std::string& name, const glm::vec3& value);
 
 private:
     int getUniformLocation(const std::string& name) const;

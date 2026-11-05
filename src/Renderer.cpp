@@ -32,3 +32,10 @@ void Renderer::drawInstanced(const IndexBuffer &indexBuffer, const VertexBuffer 
     shaderProgram.bind();
     GLCall(glDrawElementsInstanced(GL_TRIANGLES, indexBuffer.getCount(), GL_UNSIGNED_INT, nullptr, count));
 }
+
+void Renderer::drawLines(const IndexBuffer &indexBuffer, const VertexBuffer &vertexBuffer, const ShaderProgram &shaderProgram) const {
+    vertexBuffer.bind();
+    indexBuffer.bind();
+    shaderProgram.bind();
+    GLCall(glDrawElements(GL_LINES, indexBuffer.getCount(), GL_UNSIGNED_INT, nullptr));
+}

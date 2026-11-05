@@ -25,6 +25,8 @@ Minecraft::Minecraft()
     , m_translation(0.0f, 0.0f, 0.0f) {
     m_camera = std::make_unique<Camera>();
     m_world = std::make_unique<World>(glm::ivec2(10, 10));
+    m_player = std::make_unique<Player>(glm::vec3(10, 10, 10), glm::vec3(3, 5, 3));
+    m_showPlayerBox = true;
     m_debugMode = false;
 }
 
@@ -84,9 +86,45 @@ void Minecraft::setup() {
     m_texture = std::make_unique<Texture>("../res/textures/atlas.png");
     m_texture->bind(0);
 
+    setupPlayerWireframe();
+
     if (!m_debugMode) {
         hideMousePointer();
     }
+}
+
+void Minecraft::setupPlayerWireframe() {
+    // 8 corners of a unit cube [0,1]^3
+    glm::vec3 corners[8] = {
+        {0.0f, 0.0f, 0.0f},
+        {1.0f, 0.0f, 0.0f},
+        {1.0f, 0.0f, 1.0f},
+        {0.0f, 0.0f, 1.0f},
+        {0.0f, 1.0f, 0.0f},
+        {1.0f, 1.0f, 0.0f},
+        {1.0f, 1.0f, 1.0f},
+        {0.0f, 1.0f, 1.0f},
+    };
+
+    // 12 edges, 2 indices each
+    unsigned int edges[24] = {
+        0, 1,  1, 2,  2, 3,  3, 0, // bottom
+        4, 5,  5, 6,  6, 7,  7, 4, // top
+        0, 4,  1, 5,  2, 6,  3, 7, // vertical
+    };
+
+    m_playerVBO = std::make_unique<VertexBuffer>(corners, sizeof(corners));
+    m_playerIBO = std::make_unique<IndexBuffer>(edges, 24);
+
+    auto layout = VertexBufferLayout();
+    layout.push<float>(3);
+
+    m_playerVAO = std::make_unique<VertexArray>();
+    m_playerVAO->addBuffer(*m_playerVBO, layout);
+
+    auto vertS = Shader("../res/shaders/wireframe.vert", ShaderType::VERTEX);
+    auto fragS = Shader("../res/shaders/wireframe.frag", ShaderType::FRAGMENT);
+    m_playerProgram = std::make_unique<ShaderProgram>(vertS, fragS);
 }
 
 void Minecraft::rebuildBatches() {
@@ -202,7 +240,10 @@ void Minecraft::onKeyboard(unsigned char key, int x, int y) {
 }
 
 void Minecraft::onKeyboardUp(unsigned char key, int x, int y) {
-    switch ((int)key) {
+    switch (key) {
+        case 'w': case 'a': case 's': case 'd':
+            m_player->setSpeed(glm::vec3(0.0f, 0.0f, 0.0f));
+            break;
         case 27:
             m_debugMode = !m_debugMode;
             if (m_debugMode) { showMousePointer(); }
@@ -214,19 +255,36 @@ void Minecraft::onKeyboardUp(unsigned char key, int x, int y) {
 }
 
 void Minecraft::onUpdate() {
-    auto speed = m_camera->getSpeed();
     if (m_pressedKeys.contains('w')) {
-        m_camera->setPosition(m_camera->getPosition() + m_camera->getFront() * speed);
+        auto currSpeed = m_player->getSpeed();
+        m_player->setSpeed(glm::vec3(currSpeed.x, currSpeed.y, 1.0f));
     }
     if (m_pressedKeys.contains('s')) {
-        m_camera->setPosition(m_camera->getPosition() - m_camera->getFront() * speed);
+        auto currSpeed = m_player->getSpeed();
+        m_player->setSpeed(glm::vec3(currSpeed.x, currSpeed.y, -1.0));
     }
     if (m_pressedKeys.contains('a')) {
-        m_camera->setPosition(m_camera->getPosition() - glm::normalize(glm::cross(m_camera->getFront(), m_camera->getUp())) * speed);
+        auto currSpeed = m_player->getSpeed();
+        m_player->setSpeed(glm::vec3(1.0f, currSpeed.y, currSpeed.z));
     }
     if (m_pressedKeys.contains('d')) {
-        m_camera->setPosition(m_camera->getPosition() + glm::normalize(glm::cross(m_camera->getFront(), m_camera->getUp())) * speed);
+        auto currSpeed = m_player->getSpeed();
+        m_player->setSpeed(glm::vec3(-1.0f, currSpeed.y, currSpeed.z));
     }
+    m_player->update();
+    // auto speed = m_camera->getSpeed();
+    // if (m_pressedKeys.contains('w')) {
+    //     m_camera->setPosition(m_camera->getPosition() + m_camera->getFront() * speed);
+    // }
+    // if (m_pressedKeys.contains('s')) {
+    //     m_camera->setPosition(m_camera->getPosition() - m_camera->getFront() * speed);
+    // }
+    // if (m_pressedKeys.contains('a')) {
+    //     m_camera->setPosition(m_camera->getPosition() - glm::normalize(glm::cross(m_camera->getFront(), m_camera->getUp())) * speed);
+    // }
+    // if (m_pressedKeys.contains('d')) {
+    //     m_camera->setPosition(m_camera->getPosition() + glm::normalize(glm::cross(m_camera->getFront(), m_camera->getUp())) * speed);
+    // }
 
     glutPostRedisplay();
 }
@@ -247,6 +305,21 @@ void Minecraft::onDisplay() {
             batch.vao->bind();
             m_renderer->drawInstanced(*m_indexBuffer, *batch.geometryVBO, *m_program, batch.instanceCount);
         }
+    }
+
+    // player wireframe box
+    if (m_showPlayerBox) {
+        auto pos = m_player->getPosition();
+        auto box = m_player->getBox();
+        auto model = glm::translate(glm::mat4(1.0f), pos - glm::vec3(box.x * 0.5f, 0.0f, box.z * 0.5f));
+        model = glm::scale(model, box);
+        auto playerMvp = m_projection * view * model;
+
+        m_playerProgram->bind();
+        m_playerProgram->setUniformMat4("u_mvp", playerMvp);
+        m_playerProgram->setUniformVec3("u_color", glm::vec3(1.0f, 1.0f, 1.0f));
+        m_playerVAO->bind();
+        m_renderer->drawLines(*m_playerIBO, *m_playerVBO, *m_playerProgram);
     }
 
     ImGui_ImplOpenGL3_NewFrame();
@@ -270,6 +343,9 @@ void Minecraft::onDisplay() {
         }
         ImGui::Text("Chunks: %zu", m_chunkBatches.size());
         ImGui::Text("Total faces: %u", totalFaces);
+
+        ImGui::Separator();
+        ImGui::Checkbox("Show player box", &m_showPlayerBox);
 
         if (ImGui::CollapsingHeader("Terrain", ImGuiTreeNodeFlags_DefaultOpen)) {
             auto& p = m_world->generator().params();

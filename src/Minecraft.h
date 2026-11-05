@@ -9,6 +9,7 @@
 
 #include "Camera.h"
 #include "Material.h"
+#include "Player.h"
 #include "Renderer.h"
 #include "Texture.h"
 #include "VertexArray.h"
@@ -35,10 +36,18 @@ private:
     std::unique_ptr<Texture> m_texture;
     glm::vec3 m_translation;
 
+    std::unique_ptr<VertexArray> m_playerVAO;
+    std::unique_ptr<VertexBuffer> m_playerVBO;
+    std::unique_ptr<IndexBuffer> m_playerIBO;
+    std::unique_ptr<ShaderProgram> m_playerProgram;
+
     glm::mat4 m_projection;
 
     std::unique_ptr<Camera> m_camera;
     std::unique_ptr<World> m_world;
+    std::unique_ptr<Player> m_player;
+
+    bool m_showPlayerBox;
 
     std::unordered_set<unsigned char> m_pressedKeys;
 
@@ -46,6 +55,7 @@ private:
 
     void setup();
     void rebuildBatches();
+    void setupPlayerWireframe();
 
 public:
     Minecraft();

@@ -9,7 +9,7 @@ public:
         float frequency = 0.02f;
         int octaves = 4;
         int seed = 1337;
-        int baseHeight = 16;
+        int baseHeight = 8;
         int amplitude = 8;
     };
 

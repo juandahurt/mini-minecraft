@@ -34,6 +34,10 @@ void ShaderProgram::setUniformInt(const std::string &name, int value) {
     GLCall(glUniform1i(getUniformLocation(name), value));
 }
 
+void ShaderProgram::setUniformVec3(const std::string &name, const glm::vec3 &value) {
+    GLCall(glUniform3f(getUniformLocation(name), value.x, value.y, value.z));
+}
+
 int ShaderProgram::getUniformLocation(const std::string &name) const {
     GLCall(unsigned int location = glGetUniformLocation(m_id, name.c_str()));
     if (location == -1) {
