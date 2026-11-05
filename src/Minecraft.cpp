@@ -6,6 +6,7 @@
 #ifdef __APPLE_CC__
 #include <GLUT/glut.h>
 #include <OpenGL/gl3.h>
+#include <ApplicationServices/ApplicationServices.h>
 #endif
 
 #include "Face.h"
@@ -83,7 +84,7 @@ void Minecraft::setup() {
     m_texture = std::make_unique<Texture>("../res/textures/atlas.png");
     m_texture->bind(0);
 
-    if (m_debugMode) {
+    if (!m_debugMode) {
         hideMousePointer();
     }
 }
@@ -153,6 +154,8 @@ void Minecraft::onKeyboardUpWrapper(unsigned char key, int x, int y) {
 }
 
 void Minecraft::onReshape(int w, int h) {
+    m_width = w;
+    m_height = h;
     m_projection = glm::perspective(glm::radians(60.0f), (float)w / (float)h, 0.1f, 100.0f);
 }
 
@@ -161,27 +164,21 @@ void Minecraft::onMotion(int x, int y) {}
 void Minecraft::onPassiveMotion(int x, int y) {
     if (m_debugMode) { return; } // camera movement disabled on debug mode
     std::cout << m_debugMode << std::endl;
-    static float lastX = x;
-    static float lastY = y;
+    int cx = m_width / 2;
+    int cy = m_height / 2;
+    int dx = x - cx;
+    int dy = cy - y;
+    if (dx == 0 && dy == 0) { return; } // ignore the event caused by the warp itself
+
     static float yaw = 90;
     static float pitch = 0;
-    static float firstMove = true;
-
-    if (firstMove == true) {
-        firstMove = false;
-        lastX = static_cast<float>(x);
-        lastY = static_cast<float>(y);
-        return;
-    }
-
-    float xOffset = static_cast<float>(x) - lastX;
-    lastX = static_cast<float>(x);
-    float yOffset = lastY - static_cast<float>(y);
-    lastY = static_cast<float>(y);
     float sensibility = 0.1f;
 
-    yaw += xOffset * sensibility;
-    pitch += yOffset * sensibility;
+    yaw += (float)dx * sensibility;
+    pitch += (float)dy * sensibility;
+
+    std::cout << yaw << std::endl;
+    std::cout << pitch << std::endl;
 
     if (pitch > 89.0f) { pitch = 89.0f; }
     if (pitch < -89.0f) { pitch = -89.0f; }
@@ -191,6 +188,13 @@ void Minecraft::onPassiveMotion(int x, int y) {
     direction.y = sin(glm::radians(pitch));
     direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
     m_camera->setFront(glm::normalize(direction));
+
+    #ifdef __APPLE__ // TODO: add linux variation
+    int wx = glutGet(GLUT_WINDOW_X);
+    int wy = glutGet(GLUT_WINDOW_Y);
+    CGWarpMouseCursorPosition(CGPointMake(wx + cx, wy + cy));
+    CGAssociateMouseAndMouseCursorPosition(true);
+    #endif
 }
 
 void Minecraft::onKeyboard(unsigned char key, int x, int y) {
