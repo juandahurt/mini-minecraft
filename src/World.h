@@ -5,6 +5,7 @@
 #ifndef MINI_MINECRAFT_WORLD_H
 #define MINI_MINECRAFT_WORLD_H
 #include "Chunk.h"
+#include "Player.h"
 #include "WorldGenerator.h"
 
 #define CHUNK_SIZE 6
@@ -25,6 +26,7 @@ public:
 
     WorldGenerator& generator();
     const std::vector<Chunk>& getChunks() const;
+    std::vector<const Chunk*> chunksOverlapping(const AABB& box) const;
 };
 
 
