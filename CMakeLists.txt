@@ -60,4 +60,4 @@ target_include_directories(mini_minecraft PRIVATE
         ${FASTNOISE_DIR}
 )
 
-target_link_libraries(mini_minecraft PRIVATE "-framework OpenGL -framework GLUT" glm::glm)
+target_link_libraries(mini_minecraft PRIVATE "-framework OpenGL -framework GLUT -framework ApplicationServices" glm::glm)

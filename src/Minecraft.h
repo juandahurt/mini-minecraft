@@ -42,6 +42,8 @@ private:
 
     std::unordered_set<unsigned char> m_pressedKeys;
 
+    bool m_debugMode;
+
     void setup();
     void rebuildBatches();
 
@@ -72,6 +74,10 @@ public:
     void onPassiveMotion(int x, int y);
     void onKeyboard(unsigned char key, int x, int y);
     void onKeyboardUp(unsigned char key, int x, int y);
+
+    // debug menu
+    void hideMousePointer();
+    void showMousePointer();
 };
 
 #endif //MINI_MINECRAFT_WINDOW_H

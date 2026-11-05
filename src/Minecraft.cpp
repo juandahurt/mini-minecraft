@@ -6,6 +6,7 @@
 #ifdef __APPLE_CC__
 #include <GLUT/glut.h>
 #include <OpenGL/gl3.h>
+#include <ApplicationServices/ApplicationServices.h>
 #endif
 
 #include "Face.h"
@@ -24,6 +25,7 @@ Minecraft::Minecraft()
     , m_translation(0.0f, 0.0f, 0.0f) {
     m_camera = std::make_unique<Camera>();
     m_world = std::make_unique<World>(glm::ivec2(10, 10));
+    m_debugMode = false;
 }
 
 Minecraft::~Minecraft() {
@@ -81,6 +83,10 @@ void Minecraft::setup() {
 
     m_texture = std::make_unique<Texture>("../res/textures/atlas.png");
     m_texture->bind(0);
+
+    if (!m_debugMode) {
+        hideMousePointer();
+    }
 }
 
 void Minecraft::rebuildBatches() {
@@ -148,33 +154,31 @@ void Minecraft::onKeyboardUpWrapper(unsigned char key, int x, int y) {
 }
 
 void Minecraft::onReshape(int w, int h) {
+    m_width = w;
+    m_height = h;
     m_projection = glm::perspective(glm::radians(60.0f), (float)w / (float)h, 0.1f, 100.0f);
 }
 
 void Minecraft::onMouse(int button, int state, int x, int y) {}
 void Minecraft::onMotion(int x, int y) {}
 void Minecraft::onPassiveMotion(int x, int y) {
-    static float lastX = x;
-    static float lastY = y;
+    if (m_debugMode) { return; } // camera movement disabled on debug mode
+    std::cout << m_debugMode << std::endl;
+    int cx = m_width / 2;
+    int cy = m_height / 2;
+    int dx = x - cx;
+    int dy = cy - y;
+    if (dx == 0 && dy == 0) { return; } // ignore the event caused by the warp itself
+
     static float yaw = 90;
     static float pitch = 0;
-    static float firstMove = true;
-
-    if (firstMove == true) {
-        firstMove = false;
-        lastX = static_cast<float>(x);
-        lastY = static_cast<float>(y);
-        return;
-    }
-
-    float xOffset = static_cast<float>(x) - lastX;
-    lastX = static_cast<float>(x);
-    float yOffset = lastY - static_cast<float>(y);
-    lastY = static_cast<float>(y);
     float sensibility = 0.1f;
 
-    yaw += xOffset * sensibility;
-    pitch += yOffset * sensibility;
+    yaw += (float)dx * sensibility;
+    pitch += (float)dy * sensibility;
+
+    std::cout << yaw << std::endl;
+    std::cout << pitch << std::endl;
 
     if (pitch > 89.0f) { pitch = 89.0f; }
     if (pitch < -89.0f) { pitch = -89.0f; }
@@ -184,6 +188,13 @@ void Minecraft::onPassiveMotion(int x, int y) {
     direction.y = sin(glm::radians(pitch));
     direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
     m_camera->setFront(glm::normalize(direction));
+
+    #ifdef __APPLE__ // TODO: add linux variation
+    int wx = glutGet(GLUT_WINDOW_X);
+    int wy = glutGet(GLUT_WINDOW_Y);
+    CGWarpMouseCursorPosition(CGPointMake(wx + cx, wy + cy));
+    CGAssociateMouseAndMouseCursorPosition(true);
+    #endif
 }
 
 void Minecraft::onKeyboard(unsigned char key, int x, int y) {
@@ -191,6 +202,14 @@ void Minecraft::onKeyboard(unsigned char key, int x, int y) {
 }
 
 void Minecraft::onKeyboardUp(unsigned char key, int x, int y) {
+    switch ((int)key) {
+        case 27:
+            m_debugMode = !m_debugMode;
+            if (m_debugMode) { showMousePointer(); }
+            else { hideMousePointer(); }
+            break;
+        default: printf(":)");
+    }
     m_pressedKeys.erase(key);
 }
 
@@ -234,9 +253,8 @@ void Minecraft::onDisplay() {
     ImGui_ImplGLUT_NewFrame();
     ImGui::NewFrame();
 
-    static bool showDebug = true;
-    if (showDebug) {
-        ImGui::Begin("Debug", &showDebug, ImGuiWindowFlags_AlwaysAutoResize);
+    if (m_debugMode) {
+        ImGui::Begin("Debug", &m_debugMode, ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
         ImGui::Text("OpenGL: %s", glGetString(GL_VERSION));
         ImGui::Text("GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
@@ -274,4 +292,13 @@ void Minecraft::onDisplay() {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     glutSwapBuffers();
+}
+
+
+void Minecraft::hideMousePointer() {
+    glutSetCursor(GLUT_CURSOR_NONE);
+}
+
+void Minecraft::showMousePointer() {
+    glutSetCursor(GLUT_CURSOR_INHERIT);
 }
