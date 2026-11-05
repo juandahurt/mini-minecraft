@@ -13,6 +13,7 @@
 
 #include "FaceDirection.h"
 #include "Material.h"
+#include "Player.h"
 #include "WorldGenerator.h"
 
 using FaceInstances = std::map<std::pair<FaceDirection, Material>, std::vector<glm::vec3>>;
@@ -32,6 +33,9 @@ public:
 
     bool hasBlockAt(glm::ivec3 localPos) const;
     const FaceInstances& getFaceInstances() const;
+    std::vector<glm::ivec3> blocksOverlapping(const AABB& worldBox) const;
+
+    const glm::ivec2& getPosition() const;
 };
 
 

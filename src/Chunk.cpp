@@ -4,6 +4,10 @@
 
 #include "Chunk.h"
 
+#include <cmath>
+#include <iostream>
+#include <ostream>
+
 #include "World.h"
 
 Chunk::Chunk(glm::ivec2 position) : m_position(position) {}
@@ -51,4 +55,32 @@ void Chunk::buildFaceInstances(const Chunk* xPos, const Chunk* xNeg,
 
 const FaceInstances& Chunk::getFaceInstances() const {
     return m_instances;
+}
+
+std::vector<glm::ivec3> Chunk::blocksOverlapping(const AABB& worldBox) const {
+    const glm::ivec3 worldOffset = CHUNK_SIZE * glm::ivec3(m_position.x, 0, m_position.y);
+
+    int minX = (int)std::floor(worldBox.min.x);
+    int maxX = (int)std::floor(worldBox.max.x);
+    int minY = (int)std::floor(worldBox.min.y);
+    int maxY = (int)std::floor(worldBox.max.y);
+    int minZ = (int)std::floor(worldBox.min.z);
+    int maxZ = (int)std::floor(worldBox.max.z);
+
+    std::vector<glm::ivec3> result;
+    for (int wx = minX; wx <= maxX; wx++) {
+        for (int wy = minY; wy <= maxY; wy++) {
+            for (int wz = minZ; wz <= maxZ; wz++) {
+                glm::ivec3 local = glm::ivec3(wx, wy, wz) - worldOffset;
+                if (local.x < 0 || local.x >= CHUNK_SIZE) continue;
+                if (local.z < 0 || local.z >= CHUNK_SIZE) continue;
+                if (local.y < 0) continue;
+                std::cout << local.x << ' ' << local.y  <<  ' ' << local.z << std::endl;
+                if (hasBlockAt(local)) {
+                    result.push_back({wx, wy, wz});
+                }
+            }
+        }
+    }
+    return result;
 }

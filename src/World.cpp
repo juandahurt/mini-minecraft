@@ -4,6 +4,8 @@
 
 #include "World.h"
 
+#include <cmath>
+
 World::World(glm::ivec2 worldSizeInChunks): m_worldSizeInChunks(worldSizeInChunks) {}
 
 void World::load() {
@@ -58,4 +60,21 @@ WorldGenerator& World::generator() {
 
 const std::vector<Chunk>& World::getChunks() const {
     return m_chunks;
+}
+
+std::vector<const Chunk*> World::chunksOverlapping(const AABB& box) const {
+    int minCx = (int)std::floor(box.min.x / (float)CHUNK_SIZE);
+    int maxCx = (int)std::floor(box.max.x / (float)CHUNK_SIZE);
+    int minCz = (int)std::floor(box.min.z / (float)CHUNK_SIZE);
+    int maxCz = (int)std::floor(box.max.z / (float)CHUNK_SIZE);
+
+    std::vector<const Chunk*> result;
+    for (int cx = minCx; cx <= maxCx; cx++) {
+        for (int cz = minCz; cz <= maxCz; cz++) {
+            if (const Chunk* c = chunkAt(cx, cz)) {
+                result.push_back(c);
+            }
+        }
+    }
+    return result;
 }

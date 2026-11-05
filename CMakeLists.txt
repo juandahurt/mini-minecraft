@@ -49,7 +49,9 @@ add_executable(mini_minecraft main.cpp
         src/World.cpp
         src/World.h
         src/Material.h
-        src/FaceDirection.h)
+        src/FaceDirection.h
+        src/Player.cpp
+        src/Player.h)
 
 target_include_directories(mini_minecraft PRIVATE
         ${OPENGL_INCLUDE_DIR}

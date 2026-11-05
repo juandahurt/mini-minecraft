@@ -56,6 +56,7 @@ private:
     void setup();
     void rebuildBatches();
     void setupPlayerWireframe();
+    bool playerCollides() const;
 
 public:
     Minecraft();

@@ -1,5 +1,6 @@
 #include "Minecraft.h"
 
+#include <algorithm>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -25,7 +26,7 @@ Minecraft::Minecraft()
     , m_translation(0.0f, 0.0f, 0.0f) {
     m_camera = std::make_unique<Camera>();
     m_world = std::make_unique<World>(glm::ivec2(10, 10));
-    m_player = std::make_unique<Player>(glm::vec3(10, 10, 10), glm::vec3(3, 5, 3));
+    m_player = std::make_unique<Player>(glm::vec3(10, 30, 10), glm::vec3(1, 2, 1));
     m_showPlayerBox = true;
     m_debugMode = false;
 }
@@ -47,7 +48,7 @@ void Minecraft::create(int argc, char** argv) {
     glutInitWindowSize(instance->m_width, instance->m_height);
     glutCreateWindow(instance->m_title.c_str());
 
-    glutFullScreen();
+    // glutFullScreen();
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -201,7 +202,6 @@ void Minecraft::onMouse(int button, int state, int x, int y) {}
 void Minecraft::onMotion(int x, int y) {}
 void Minecraft::onPassiveMotion(int x, int y) {
     if (m_debugMode) { return; } // camera movement disabled on debug mode
-    std::cout << m_debugMode << std::endl;
     int cx = m_width / 2;
     int cy = m_height / 2;
     int dx = x - cx;
@@ -214,9 +214,6 @@ void Minecraft::onPassiveMotion(int x, int y) {
 
     yaw += (float)dx * sensibility;
     pitch += (float)dy * sensibility;
-
-    std::cout << yaw << std::endl;
-    std::cout << pitch << std::endl;
 
     if (pitch > 89.0f) { pitch = 89.0f; }
     if (pitch < -89.0f) { pitch = -89.0f; }
@@ -271,7 +268,25 @@ void Minecraft::onUpdate() {
         auto currSpeed = m_player->getSpeed();
         m_player->setSpeed(glm::vec3(-1.0f, currSpeed.y, currSpeed.z));
     }
+    glm::vec3 prevPos = m_player->getPosition();
     m_player->update();
+    glm::vec3 delta = m_player->getPosition() - prevPos;
+
+    // axis-separated collision resolution. speed is never touched,
+    // so gravity keeps accumulating even when standing on ground.
+    m_player->setPosition(prevPos + glm::vec3(0.0f, delta.y, 0.0f));
+    if (playerCollides()) m_player->setPosition(prevPos);
+    glm::vec3 afterY = m_player->getPosition();
+
+    m_player->setPosition(afterY + glm::vec3(delta.x, 0.0f, 0.0f));
+    if (playerCollides()) m_player->setPosition(afterY);
+    glm::vec3 afterX = m_player->getPosition();
+
+    m_player->setPosition(afterX + glm::vec3(0.0f, 0.0f, delta.z));
+    if (playerCollides()) m_player->setPosition(afterX);
+    // std::cout << m_player->getPosition().z % (float)CHUNK_SIZE << std::endl;
+    // get the
+
     // auto speed = m_camera->getSpeed();
     // if (m_pressedKeys.contains('w')) {
     //     m_camera->setPosition(m_camera->getPosition() + m_camera->getFront() * speed);
@@ -300,8 +315,12 @@ void Minecraft::onDisplay() {
     m_program->setUniformMat4("u_mvp", mvp);
     m_program->setUniformInt("u_texture", 0);
 
-    for (auto& chunkBatches : m_chunkBatches) {
-        for (auto& [key, batch] : chunkBatches) {
+    auto collidingChunks = m_world->chunksOverlapping(m_player->getAABB());
+    const auto& chunks = m_world->getChunks();
+    for (size_t i = 0; i < m_chunkBatches.size(); ++i) {
+        bool isColliding = std::ranges::find(collidingChunks, &chunks[i]) != collidingChunks.end();
+        m_program->setUniformInt("debug", isColliding ? 1 : 0);
+        for (auto& [key, batch] : m_chunkBatches[i]) {
             batch.vao->bind();
             m_renderer->drawInstanced(*m_indexBuffer, *batch.geometryVBO, *m_program, batch.instanceCount);
         }
@@ -370,6 +389,14 @@ void Minecraft::onDisplay() {
     glutSwapBuffers();
 }
 
+
+bool Minecraft::playerCollides() const {
+    auto aabb = m_player->getAABB();
+    for (auto chunk : m_world->chunksOverlapping(aabb)) {
+        if (!chunk->blocksOverlapping(aabb).empty()) return true;
+    }
+    return false;
+}
 
 void Minecraft::hideMousePointer() {
     glutSetCursor(GLUT_CURSOR_NONE);
