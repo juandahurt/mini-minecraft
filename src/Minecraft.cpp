@@ -26,7 +26,7 @@ Minecraft::Minecraft()
     , m_translation(0.0f, 0.0f, 0.0f) {
     m_camera = std::make_unique<Camera>();
     m_world = std::make_unique<World>(glm::ivec2(10, 10));
-    m_player = std::make_unique<Player>(glm::vec3(10, 30, 10), glm::vec3(1, 2, 1));
+    m_player = std::make_unique<Player>(glm::vec3(10, 30, 10), glm::vec3(0.7, 2, 0.7));
     m_showPlayerBox = true;
     m_debugMode = false;
 }
@@ -48,7 +48,7 @@ void Minecraft::create(int argc, char** argv) {
     glutInitWindowSize(instance->m_width, instance->m_height);
     glutCreateWindow(instance->m_title.c_str());
 
-    // glutFullScreen();
+    glutFullScreen();
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -236,7 +236,7 @@ void Minecraft::onKeyboard(unsigned char key, int x, int y) {
     m_pressedKeys.insert(key);
     if (key == 32) {
         auto s = m_player->getSpeed();
-        m_player->setSpeed(s + glm::vec3(s.x, 2.1f, s.z));
+        m_player->setSpeed(s + glm::vec3(s.x, 3.0f, s.z));
     }
 }
 
@@ -256,21 +256,21 @@ void Minecraft::onKeyboardUp(unsigned char key, int x, int y) {
 }
 
 void Minecraft::onUpdate() {
-    if (m_pressedKeys.contains('w')) {
+    glm::vec3 camFront = m_camera->getFront();
+    glm::vec3 forward = glm::vec3(camFront.x, 0.0f, camFront.z);
+    if (glm::length(forward) > 0.0f) forward = glm::normalize(forward);
+    glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+
+    glm::vec3 move(0.0f);
+    if (m_pressedKeys.contains('w')) move += forward;
+    if (m_pressedKeys.contains('s')) move -= forward;
+    if (m_pressedKeys.contains('a')) move -= right;
+    if (m_pressedKeys.contains('d')) move += right;
+
+    if (glm::length(move) > 0.0f) {
+        move = glm::normalize(move);
         auto currSpeed = m_player->getSpeed();
-        m_player->setSpeed(glm::vec3(currSpeed.x, currSpeed.y, 1.0f));
-    }
-    if (m_pressedKeys.contains('s')) {
-        auto currSpeed = m_player->getSpeed();
-        m_player->setSpeed(glm::vec3(currSpeed.x, currSpeed.y, -1.0));
-    }
-    if (m_pressedKeys.contains('a')) {
-        auto currSpeed = m_player->getSpeed();
-        m_player->setSpeed(glm::vec3(1.0f, currSpeed.y, currSpeed.z));
-    }
-    if (m_pressedKeys.contains('d')) {
-        auto currSpeed = m_player->getSpeed();
-        m_player->setSpeed(glm::vec3(-1.0f, currSpeed.y, currSpeed.z));
+        m_player->setSpeed(glm::vec3(move.x, currSpeed.y, move.z));
     }
     glm::vec3 prevPos = m_player->getPosition();
     m_player->update();
@@ -292,22 +292,8 @@ void Minecraft::onUpdate() {
 
     m_player->setPosition(afterX + glm::vec3(0.0f, 0.0f, delta.z));
     if (playerCollides()) m_player->setPosition(afterX);
-    // std::cout << m_player->getPosition().z % (float)CHUNK_SIZE << std::endl;
-    // get the
 
-    // auto speed = m_camera->getSpeed();
-    // if (m_pressedKeys.contains('w')) {
-    //     m_camera->setPosition(m_camera->getPosition() + m_camera->getFront() * speed);
-    // }
-    // if (m_pressedKeys.contains('s')) {
-    //     m_camera->setPosition(m_camera->getPosition() - m_camera->getFront() * speed);
-    // }
-    // if (m_pressedKeys.contains('a')) {
-    //     m_camera->setPosition(m_camera->getPosition() - glm::normalize(glm::cross(m_camera->getFront(), m_camera->getUp())) * speed);
-    // }
-    // if (m_pressedKeys.contains('d')) {
-    //     m_camera->setPosition(m_camera->getPosition() + glm::normalize(glm::cross(m_camera->getFront(), m_camera->getUp())) * speed);
-    // }
+    m_camera->setPosition(m_player->getPosition() + glm::vec3(0.0f, m_player->getBox().y * 0.9f, 0.0f));
 
     glutPostRedisplay();
 }
