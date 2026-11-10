@@ -17,6 +17,8 @@ class Player {
     glm::vec3 m_box;
     glm::vec3 m_speed;
     glm::vec3 m_gravity;
+    glm::vec3 m_front;
+    glm::vec3 m_up;
 public:
     Player(glm::vec3 position, glm::vec3 box);
 

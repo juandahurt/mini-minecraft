@@ -7,7 +7,7 @@
 
 Player::Player(glm::vec3 position, glm::vec3 box) : m_position(position), m_box(box) {
     m_speed = glm::vec3(0.0f, 0.0f, 0.0f);
-    m_gravity = glm::vec3(0.0f, -0.5f, 0.0f);
+    m_gravity = glm::vec3(0.0f, -0.8f, 0.0f);
 }
 
 void Player::update() {
