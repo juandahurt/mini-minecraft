@@ -14,6 +14,7 @@
 #include "imgui.h"
 #include "imgui_impl_glut.h"
 #include "imgui_impl_opengl3.h"
+#include "Ray.h"
 #include "Shader.h"
 #include "Texture.h"
 #include "Vertex.h"
@@ -29,6 +30,8 @@ Minecraft::Minecraft()
     m_player = std::make_unique<Player>(glm::vec3(10, 30, 10), glm::vec3(0.7, 2, 0.7));
     m_showPlayerBox = true;
     m_debugMode = false;
+    m_showRay = true;
+    m_showCurrentChunk = false;
 }
 
 Minecraft::~Minecraft() {
@@ -224,12 +227,7 @@ void Minecraft::onPassiveMotion(int x, int y) {
     direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
     m_camera->setFront(glm::normalize(direction));
 
-    #ifdef __APPLE__ // TODO: add linux variation
-    int wx = glutGet(GLUT_WINDOW_X);
-    int wy = glutGet(GLUT_WINDOW_Y);
-    CGWarpMouseCursorPosition(CGPointMake(wx + cx, wy + cy));
-    CGAssociateMouseAndMouseCursorPosition(true);
-    #endif
+    moveMouseToWindowCenter();
 }
 
 void Minecraft::onKeyboard(unsigned char key, int x, int y) {
@@ -248,7 +246,10 @@ void Minecraft::onKeyboardUp(unsigned char key, int x, int y) {
         case 27:
             m_debugMode = !m_debugMode;
             if (m_debugMode) { showMousePointer(); }
-            else { hideMousePointer(); }
+            else {
+                hideMousePointer();
+                moveMouseToWindowCenter();
+            }
             break;
         default: printf(":)");
     }
@@ -295,6 +296,27 @@ void Minecraft::onUpdate() {
 
     m_camera->setPosition(m_player->getPosition() + glm::vec3(0.0f, m_player->getBox().y * 0.9f, 0.0f));
 
+    if (m_showRay) {
+        // check for ray collisions
+        auto ray = Ray(m_camera->getPosition(), glm::normalize(m_camera->getFront()));
+        const float step = 0.1f;
+        const float reach = 5.0f;
+        m_selectedCubePos.reset();
+        for (float t = 0.0f; t <= reach && !m_selectedCubePos; t += step) {
+            const auto pos = ray.pointAt(t);
+            const glm::ivec3 blockPos = glm::ivec3(glm::floor(pos));
+            for (auto& chunk : m_world->getChunks()) {
+                const auto chunkPos = chunk.getPosition();
+                const glm::ivec3 worldOffset = CHUNK_SIZE * glm::ivec3(chunkPos.x, 0, chunkPos.y);
+                if (chunk.hasBlockAt(blockPos - worldOffset)) {
+                    m_selectedCubePos = glm::vec3(blockPos);
+                    break;
+                }
+            }
+        }
+    }
+
+
     glutPostRedisplay();
 }
 
@@ -313,7 +335,7 @@ void Minecraft::onDisplay() {
     const auto& chunks = m_world->getChunks();
     for (size_t i = 0; i < m_chunkBatches.size(); ++i) {
         bool isColliding = std::ranges::find(collidingChunks, &chunks[i]) != collidingChunks.end();
-        m_program->setUniformInt("debug", isColliding ? 1 : 0);
+        m_program->setUniformInt("debug", m_showCurrentChunk && isColliding ? 1 : 0);
         for (auto& [key, batch] : m_chunkBatches[i]) {
             batch.vao->bind();
             m_renderer->drawInstanced(*m_indexBuffer, *batch.geometryVBO, *m_program, batch.instanceCount);
@@ -330,6 +352,22 @@ void Minecraft::onDisplay() {
 
         m_playerProgram->bind();
         m_playerProgram->setUniformMat4("u_mvp", playerMvp);
+        m_playerProgram->setUniformVec3("u_color", glm::vec3(1.0f, 1.0f, 1.0f));
+        m_playerVAO->bind();
+        m_renderer->drawLines(*m_playerIBO, *m_playerVBO, *m_playerProgram);
+    }
+
+    if (m_showRay && m_selectedCubePos) {
+        m_playerProgram->bind();
+
+        // slightly larger than the block to avoid z-fighting with its faces
+        const float margin = 0.002f;
+        auto model = glm::translate(glm::mat4(1.0f), *m_selectedCubePos - glm::vec3(margin));
+        model = glm::scale(model, glm::vec3(1.0f + 2.0f * margin));
+        auto mvp = m_projection * view * model;
+
+        m_playerProgram->bind();
+        m_playerProgram->setUniformMat4("u_mvp", mvp);
         m_playerProgram->setUniformVec3("u_color", glm::vec3(1.0f, 1.0f, 1.0f));
         m_playerVAO->bind();
         m_renderer->drawLines(*m_playerIBO, *m_playerVBO, *m_playerProgram);
@@ -360,6 +398,12 @@ void Minecraft::onDisplay() {
         ImGui::Separator();
         ImGui::Checkbox("Show player box", &m_showPlayerBox);
 
+        ImGui::Separator();
+        ImGui::Checkbox("Show selected cube", &m_showRay);
+
+        ImGui::Separator();
+        ImGui::Checkbox("Show 'current' chunk", &m_showCurrentChunk);
+
         if (ImGui::CollapsingHeader("Terrain", ImGuiTreeNodeFlags_DefaultOpen)) {
             auto& p = m_world->generator().params();
             bool dirty = false;
@@ -384,6 +428,10 @@ void Minecraft::onDisplay() {
 }
 
 
+void Minecraft::setupRay() {
+
+}
+
 bool Minecraft::playerCollides() const {
     auto aabb = m_player->getAABB();
     for (auto chunk : m_world->chunksOverlapping(aabb)) {
@@ -398,4 +446,15 @@ void Minecraft::hideMousePointer() {
 
 void Minecraft::showMousePointer() {
     glutSetCursor(GLUT_CURSOR_INHERIT);
+}
+
+void Minecraft::moveMouseToWindowCenter() {
+    #ifdef __APPLE__ // TODO: add linux variation
+    int wx = glutGet(GLUT_WINDOW_X);
+    int wy = glutGet(GLUT_WINDOW_Y);
+    int cx = m_width / 2;
+    int cy = m_height / 2;
+    CGWarpMouseCursorPosition(CGPointMake(wx + cx, wy + cy));
+    CGAssociateMouseAndMouseCursorPosition(true);
+    #endif
 }

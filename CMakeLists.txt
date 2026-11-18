@@ -51,7 +51,9 @@ add_executable(mini_minecraft main.cpp
         src/Material.h
         src/FaceDirection.h
         src/Player.cpp
-        src/Player.h)
+        src/Player.h
+        src/Ray.cpp
+        src/Ray.h)
 
 target_include_directories(mini_minecraft PRIVATE
         ${OPENGL_INCLUDE_DIR}

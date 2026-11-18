@@ -48,6 +48,10 @@ private:
     std::unique_ptr<Player> m_player;
 
     bool m_showPlayerBox;
+    bool m_showRay;
+    bool m_showCurrentChunk;
+
+    std::optional<glm::vec3> m_selectedCubePos;
 
     std::unordered_set<unsigned char> m_pressedKeys;
 
@@ -56,6 +60,7 @@ private:
     void setup();
     void rebuildBatches();
     void setupPlayerWireframe();
+    void setupRay();
     bool playerCollides() const;
 
 public:
@@ -89,6 +94,8 @@ public:
     // debug menu
     void hideMousePointer();
     void showMousePointer();
+
+    void moveMouseToWindowCenter();
 };
 
 #endif //MINI_MINECRAFT_WINDOW_H

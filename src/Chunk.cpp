@@ -83,3 +83,7 @@ std::vector<glm::ivec3> Chunk::blocksOverlapping(const AABB& worldBox) const {
     }
     return result;
 }
+
+const glm::ivec2 &Chunk::getPosition() const {
+    return m_position;
+}
