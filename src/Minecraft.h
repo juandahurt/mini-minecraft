@@ -49,6 +49,7 @@ private:
 
     bool m_showPlayerBox;
     bool m_showRay;
+    bool m_showCurrentChunk;
 
     std::optional<glm::vec3> m_selectedCubePos;
 
@@ -93,6 +94,8 @@ public:
     // debug menu
     void hideMousePointer();
     void showMousePointer();
+
+    void moveMouseToWindowCenter();
 };
 
 #endif //MINI_MINECRAFT_WINDOW_H

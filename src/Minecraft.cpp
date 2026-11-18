@@ -31,6 +31,7 @@ Minecraft::Minecraft()
     m_showPlayerBox = true;
     m_debugMode = false;
     m_showRay = true;
+    m_showCurrentChunk = false;
 }
 
 Minecraft::~Minecraft() {
@@ -226,12 +227,7 @@ void Minecraft::onPassiveMotion(int x, int y) {
     direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
     m_camera->setFront(glm::normalize(direction));
 
-    #ifdef __APPLE__ // TODO: add linux variation
-    int wx = glutGet(GLUT_WINDOW_X);
-    int wy = glutGet(GLUT_WINDOW_Y);
-    CGWarpMouseCursorPosition(CGPointMake(wx + cx, wy + cy));
-    CGAssociateMouseAndMouseCursorPosition(true);
-    #endif
+    moveMouseToWindowCenter();
 }
 
 void Minecraft::onKeyboard(unsigned char key, int x, int y) {
@@ -250,7 +246,10 @@ void Minecraft::onKeyboardUp(unsigned char key, int x, int y) {
         case 27:
             m_debugMode = !m_debugMode;
             if (m_debugMode) { showMousePointer(); }
-            else { hideMousePointer(); }
+            else {
+                hideMousePointer();
+                moveMouseToWindowCenter();
+            }
             break;
         default: printf(":)");
     }
@@ -336,7 +335,7 @@ void Minecraft::onDisplay() {
     const auto& chunks = m_world->getChunks();
     for (size_t i = 0; i < m_chunkBatches.size(); ++i) {
         bool isColliding = std::ranges::find(collidingChunks, &chunks[i]) != collidingChunks.end();
-        m_program->setUniformInt("debug", isColliding ? 1 : 0);
+        m_program->setUniformInt("debug", m_showCurrentChunk && isColliding ? 1 : 0);
         for (auto& [key, batch] : m_chunkBatches[i]) {
             batch.vao->bind();
             m_renderer->drawInstanced(*m_indexBuffer, *batch.geometryVBO, *m_program, batch.instanceCount);
@@ -400,7 +399,10 @@ void Minecraft::onDisplay() {
         ImGui::Checkbox("Show player box", &m_showPlayerBox);
 
         ImGui::Separator();
-        ImGui::Checkbox("Show ray on click", &m_showRay);
+        ImGui::Checkbox("Show selected cube", &m_showRay);
+
+        ImGui::Separator();
+        ImGui::Checkbox("Show 'current' chunk", &m_showCurrentChunk);
 
         if (ImGui::CollapsingHeader("Terrain", ImGuiTreeNodeFlags_DefaultOpen)) {
             auto& p = m_world->generator().params();
@@ -444,4 +446,15 @@ void Minecraft::hideMousePointer() {
 
 void Minecraft::showMousePointer() {
     glutSetCursor(GLUT_CURSOR_INHERIT);
+}
+
+void Minecraft::moveMouseToWindowCenter() {
+    #ifdef __APPLE__ // TODO: add linux variation
+    int wx = glutGet(GLUT_WINDOW_X);
+    int wy = glutGet(GLUT_WINDOW_Y);
+    int cx = m_width / 2;
+    int cy = m_height / 2;
+    CGWarpMouseCursorPosition(CGPointMake(wx + cx, wy + cy));
+    CGAssociateMouseAndMouseCursorPosition(true);
+    #endif
 }
