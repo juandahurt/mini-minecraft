@@ -28,6 +28,7 @@ public:
     Chunk(glm::ivec2 position);
 
     void addBlock(glm::ivec3 position, Material material);
+    void removeBlockAt(glm::ivec3 position);
     void buildFaceInstances(const Chunk* xPos, const Chunk* xNeg,
                             const Chunk* zPos, const Chunk* zNeg);
 
@@ -36,6 +37,8 @@ public:
     std::vector<glm::ivec3> blocksOverlapping(const AABB& worldBox) const;
 
     const glm::ivec2& getPosition() const;
+    const std::unordered_map<glm::ivec3, Material> getBlockPositions() const;
+    void setBlockPositions(std::unordered_map<glm::ivec3, Material> blockPositions);
 };
 
 

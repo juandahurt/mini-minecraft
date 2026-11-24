@@ -16,12 +16,17 @@ void Chunk::addBlock(glm::ivec3 position, Material material) {
     m_blockPositions[position] = material;
 }
 
+void Chunk::removeBlockAt(glm::ivec3 position) {
+    m_blockPositions.erase(position);
+}
+
 bool Chunk::hasBlockAt(glm::ivec3 localPos) const {
     return m_blockPositions.contains(localPos);
 }
 
 void Chunk::buildFaceInstances(const Chunk* xPos, const Chunk* xNeg,
                                const Chunk* zPos, const Chunk* zNeg) {
+    m_instances.clear();
     const std::pair<FaceDirection, glm::ivec3> neighbours[] = {
         {Y_UP,   { 0,  1,  0}},
         {Y_DOWN, { 0, -1,  0}},
@@ -86,4 +91,12 @@ std::vector<glm::ivec3> Chunk::blocksOverlapping(const AABB& worldBox) const {
 
 const glm::ivec2 &Chunk::getPosition() const {
     return m_position;
+}
+
+const std::unordered_map<glm::ivec3, Material> Chunk::getBlockPositions() const {
+    return m_blockPositions;
+}
+
+void Chunk::setBlockPositions(std::unordered_map<glm::ivec3, Material> blockPositions) {
+    m_blockPositions = blockPositions;
 }

@@ -47,6 +47,9 @@ private:
     std::unique_ptr<World> m_world;
     std::unique_ptr<Player> m_player;
 
+    std::optional<glm::vec3> m_posToBeAdded;
+    std::optional<Chunk> m_chunkToModify;
+
     bool m_showPlayerBox;
     bool m_showRay;
     bool m_showCurrentChunk;
