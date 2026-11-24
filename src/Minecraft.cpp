@@ -30,8 +30,9 @@ Minecraft::Minecraft()
     m_player = std::make_unique<Player>(glm::vec3(10, 30, 10), glm::vec3(0.7, 2, 0.7));
     m_showPlayerBox = true;
     m_debugMode = false;
-    m_showRay = true;
+    m_showSelectedBlock = true;
     m_showCurrentChunk = false;
+    m_showPosToBeAdded = false;
 }
 
 Minecraft::~Minecraft() {
@@ -333,7 +334,7 @@ void Minecraft::onUpdate() {
 
     m_camera->setPosition(m_player->getPosition() + glm::vec3(0.0f, m_player->getBox().y * 0.9f, 0.0f));
 
-    if (m_showRay) {
+    if (m_showSelectedBlock) {
         // check for ray collisions
         auto ray = Ray(m_camera->getPosition(), glm::normalize(m_camera->getFront()));
         const float step = 0.1f;
@@ -406,7 +407,7 @@ void Minecraft::onDisplay() {
         m_renderer->drawLines(*m_playerIBO, *m_playerVBO, *m_playerProgram);
     }
 
-    if (m_showRay && m_selectedCubePos) {
+    if (m_showSelectedBlock && m_selectedCubePos) {
         m_playerProgram->bind();
 
         // slightly larger than the block to avoid z-fighting with its faces
@@ -420,21 +421,21 @@ void Minecraft::onDisplay() {
         m_playerProgram->setUniformVec3("u_color", glm::vec3(1.0f, 1.0f, 1.0f));
         m_playerVAO->bind();
         m_renderer->drawLines(*m_playerIBO, *m_playerVBO, *m_playerProgram);
+    }
 
-        if (m_posToBeAdded) {
-            m_playerProgram->bind();
+    if (m_showPosToBeAdded && m_posToBeAdded) {
+        m_playerProgram->bind();
 
-            const float margin = 0.002f;
-            auto model = glm::translate(glm::mat4(1.0f), *m_posToBeAdded - glm::vec3(margin));
-            model = glm::scale(model, glm::vec3(1.0f + 2.0f * margin));
-            auto mvp = m_projection * view * model;
+        const float margin = 0.002f;
+        auto model = glm::translate(glm::mat4(1.0f), *m_posToBeAdded - glm::vec3(margin));
+        model = glm::scale(model, glm::vec3(1.0f + 2.0f * margin));
+        auto mvp = m_projection * view * model;
 
-            m_playerProgram->bind();
-            m_playerProgram->setUniformMat4("u_mvp", mvp);
-            m_playerProgram->setUniformVec3("u_color", glm::vec3(1.0f, 1.0f, 1.0f));
-            m_playerVAO->bind();
-            m_renderer->drawLines(*m_playerIBO, *m_playerVBO, *m_playerProgram);
-        }
+        m_playerProgram->bind();
+        m_playerProgram->setUniformMat4("u_mvp", mvp);
+        m_playerProgram->setUniformVec3("u_color", glm::vec3(1.0f, 1.0f, 1.0f));
+        m_playerVAO->bind();
+        m_renderer->drawLines(*m_playerIBO, *m_playerVBO, *m_playerProgram);
     }
 
     ImGui_ImplOpenGL3_NewFrame();
@@ -463,7 +464,10 @@ void Minecraft::onDisplay() {
         ImGui::Checkbox("Show player box", &m_showPlayerBox);
 
         ImGui::Separator();
-        ImGui::Checkbox("Show selected cube", &m_showRay);
+        ImGui::Checkbox("Show selected cube", &m_showSelectedBlock);
+
+        ImGui::Separator();
+        ImGui::Checkbox("Show cube to be added", &m_showPosToBeAdded);
 
         ImGui::Separator();
         ImGui::Checkbox("Show 'current' chunk", &m_showCurrentChunk);

@@ -51,8 +51,9 @@ private:
     std::optional<Chunk> m_chunkToModify;
 
     bool m_showPlayerBox;
-    bool m_showRay;
+    bool m_showSelectedBlock;
     bool m_showCurrentChunk;
+    bool m_showPosToBeAdded;
 
     std::optional<glm::vec3> m_selectedCubePos;
 
