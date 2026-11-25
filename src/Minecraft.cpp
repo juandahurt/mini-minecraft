@@ -401,6 +401,7 @@ void Minecraft::onDisplay() {
         bool isColliding = std::ranges::find(collidingChunks, &chunks[i]) != collidingChunks.end();
         m_program->setUniformInt("debug", m_showCurrentChunk && isColliding ? 1 : 0);
         for (auto& [key, batch] : m_chunkBatches[i]) {
+            m_program->setUniformInt("u_faceDir", key.first);
             batch.vao->bind();
             m_renderer->drawInstanced(*m_indexBuffer, *batch.geometryVBO, *m_program, batch.instanceCount);
         }
