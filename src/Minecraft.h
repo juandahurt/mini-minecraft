@@ -58,6 +58,7 @@ private:
     bool m_physicsEnabled;
 
     std::optional<glm::vec3> m_selectedCubePos;
+    Material m_selectedMaterial;
 
     std::unordered_set<unsigned char> m_pressedKeys;
 
