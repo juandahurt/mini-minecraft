@@ -8,7 +8,8 @@
 enum Material {
     GRASS,
     DIRT,
-    STONE
+    STONE,
+    SNOW
 };
 
 #endif //MINI_MINECRAFT_MATERIAL_H

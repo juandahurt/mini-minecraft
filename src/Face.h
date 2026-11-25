@@ -94,6 +94,10 @@ struct Face {
             posInAtlas[0] = 1;
             posInAtlas[1] = 0;
         }
+        if (material == SNOW) {
+            posInAtlas[0] = 2;
+            posInAtlas[1] = 4;
+        }
         return std::make_tuple(posInAtlas[0] * tileSize, posInAtlas[1] * tileSize);
     }
 

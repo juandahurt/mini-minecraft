@@ -489,7 +489,7 @@ void Minecraft::onDisplay() {
         ImGui::Separator();
         ImGui::Checkbox("'Physics' enabled", &m_physicsEnabled);
 
-        char* materials[] = {"Grass", "Dirt", "Stone"};
+        char* materials[] = {"Grass", "Dirt", "Stone", "Snow"};
         static int selectedMaterial = static_cast<int>(m_selectedMaterial);
 
         if (ImGui::BeginCombo("Material", materials[selectedMaterial])) {
