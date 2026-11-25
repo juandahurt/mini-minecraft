@@ -31,6 +31,8 @@ public:
     void setSpeed(glm::vec3 vec);
 
     glm::vec3 getSpeed() const;
+
+    void setGravity(glm::vec3 vec);
 };
 
 

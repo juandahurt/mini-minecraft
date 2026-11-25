@@ -55,6 +55,7 @@ private:
     bool m_showSelectedBlock;
     bool m_showCurrentChunk;
     bool m_showPosToBeAdded;
+    bool m_physicsEnabled;
 
     std::optional<glm::vec3> m_selectedCubePos;
 
@@ -65,7 +66,6 @@ private:
     void setup();
     void rebuildBatches();
     void setupPlayerWireframe();
-    void setupRay();
     bool playerCollides() const;
 
 public:

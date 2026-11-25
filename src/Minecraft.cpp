@@ -30,11 +30,12 @@ Minecraft::Minecraft()
     m_camera = std::make_unique<Camera>();
     m_world = std::make_unique<World>(glm::ivec2(10, 10));
     m_player = std::make_unique<Player>(glm::vec3(10, 30, 10), glm::vec3(0.7, 2, 0.7));
-    m_showPlayerBox = true;
+    m_showPlayerBox = false;
     m_debugMode = false;
     m_showSelectedBlock = true;
     m_showCurrentChunk = false;
     m_showPosToBeAdded = false;
+    m_physicsEnabled = false;
 }
 
 Minecraft::~Minecraft() {
@@ -278,7 +279,7 @@ void Minecraft::onPassiveMotion(int x, int y) {
 
 void Minecraft::onKeyboard(unsigned char key, int x, int y) {
     m_pressedKeys.insert(key);
-    if (key == 32) {
+    if (key == 32 && m_physicsEnabled) {
         auto s = m_player->getSpeed();
         m_player->setSpeed(s + glm::vec3(s.x, 3.0f, s.z));
     }
@@ -304,7 +305,7 @@ void Minecraft::onKeyboardUp(unsigned char key, int x, int y) {
 
 void Minecraft::onUpdate() {
     glm::vec3 camFront = m_camera->getFront();
-    glm::vec3 forward = glm::vec3(camFront.x, 0.0f, camFront.z);
+    glm::vec3 forward = m_physicsEnabled ? glm::vec3(camFront.x, 0.0f, camFront.z) : camFront;
     if (glm::length(forward) > 0.0f) forward = glm::normalize(forward);
     glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
 
@@ -323,22 +324,27 @@ void Minecraft::onUpdate() {
     m_player->update();
     glm::vec3 delta = m_player->getPosition() - prevPos;
 
-    // axis-separated collision resolution. speed is never touched,
-    // so gravity keeps accumulating even when standing on ground.
-    m_player->setPosition(prevPos + glm::vec3(0.0f, delta.y, 0.0f));
-    if (playerCollides()) {
-        m_player->setPosition(prevPos);
-        auto s = m_player->getSpeed();
-        // m_player->setSpeed({s.x, 0, s.z});
+    if (m_physicsEnabled) {
+        m_player->setGravity({0, -1, 0});
+        // axis-separated collision resolution. speed is never touched,
+        // so gravity keeps accumulating even when standing on ground.
+        m_player->setPosition(prevPos + glm::vec3(0.0f, delta.y, 0.0f));
+        if (playerCollides()) {
+            m_player->setPosition(prevPos);
+            auto s = m_player->getSpeed();
+            // m_player->setSpeed({s.x, 0, s.z});
+        }
+        glm::vec3 afterY = m_player->getPosition();
+
+        m_player->setPosition(afterY + glm::vec3(delta.x, 0.0f, 0.0f));
+        if (playerCollides()) m_player->setPosition(afterY);
+        glm::vec3 afterX = m_player->getPosition();
+
+        m_player->setPosition(afterX + glm::vec3(0.0f, 0.0f, delta.z));
+        if (playerCollides()) m_player->setPosition(afterX);
+    } else {
+        m_player->setGravity(glm::vec3(0.0f, 0.0f, 0.0f));
     }
-    glm::vec3 afterY = m_player->getPosition();
-
-    m_player->setPosition(afterY + glm::vec3(delta.x, 0.0f, 0.0f));
-    if (playerCollides()) m_player->setPosition(afterY);
-    glm::vec3 afterX = m_player->getPosition();
-
-    m_player->setPosition(afterX + glm::vec3(0.0f, 0.0f, delta.z));
-    if (playerCollides()) m_player->setPosition(afterX);
 
     m_camera->setPosition(m_player->getPosition() + glm::vec3(0.0f, m_player->getBox().y * 0.9f, 0.0f));
 
@@ -362,9 +368,6 @@ void Minecraft::onUpdate() {
                     if (lastPos) {
                         m_posToBeAdded = glm::vec3(*lastPos);
                     }
-                    // if (chunkhasBlockAt(*lastPos - worldOffset)) {
-                    //     m_chunkToModify = chunk;
-                    // }
                     break;
                 }
             }
@@ -480,6 +483,9 @@ void Minecraft::onDisplay() {
         ImGui::Separator();
         ImGui::Checkbox("Show 'current' chunk", &m_showCurrentChunk);
 
+        ImGui::Separator();
+        ImGui::Checkbox("'Physics' enabled", &m_physicsEnabled);
+
         if (ImGui::CollapsingHeader("Terrain", ImGuiTreeNodeFlags_DefaultOpen)) {
             auto& p = m_world->generator().params();
             bool dirty = false;
@@ -501,11 +507,6 @@ void Minecraft::onDisplay() {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     glutSwapBuffers();
-}
-
-
-void Minecraft::setupRay() {
-
 }
 
 bool Minecraft::playerCollides() const {
