@@ -1,9 +1,59 @@
 cmake_minimum_required(VERSION 3.20)
 project(mini_minecraft)
 
+include(FetchContent)
+
+# --- OpenGL (lo provee el sistema / drivers) ---
 find_package(OpenGL REQUIRED)
-find_package(GLUT REQUIRED)
-find_package(glm CONFIG REQUIRED)
+
+# --- imgui (submódulo de git): se inicializa automáticamente si falta ---
+if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vendor/imgui/imgui.cpp")
+    find_package(Git REQUIRED)
+    message(STATUS "Inicializando submódulo vendor/imgui...")
+    execute_process(
+            COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            RESULT_VARIABLE GIT_SUBMODULE_RESULT)
+    if (NOT GIT_SUBMODULE_RESULT EQUAL 0)
+        message(FATAL_ERROR "No se pudo inicializar el submódulo vendor/imgui")
+    endif()
+endif()
+
+# --- glm: se usa la instalada en el sistema o se descarga ---
+find_package(glm CONFIG QUIET)
+if (NOT glm_FOUND)
+    message(STATUS "glm no encontrado, descargándolo...")
+    set(GLM_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(GLM_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(glm
+            GIT_REPOSITORY https://github.com/g-truc/glm.git
+            GIT_TAG 1.0.1
+            GIT_SHALLOW TRUE)
+    FetchContent_MakeAvailable(glm)
+endif()
+
+# --- GLUT: en macOS viene con el sistema; en Linux/Windows se descarga freeglut si falta ---
+if (APPLE)
+    find_package(GLUT REQUIRED)
+    set(GLUT_LIBS "-framework OpenGL -framework GLUT -framework ApplicationServices")
+else()
+    find_package(GLUT QUIET)
+    if (GLUT_FOUND)
+        set(GLUT_LIBS OpenGL::GL GLUT::GLUT)
+    else()
+        message(STATUS "GLUT no encontrado, descargando freeglut...")
+        set(FREEGLUT_BUILD_DEMOS OFF CACHE BOOL "" FORCE)
+        set(FREEGLUT_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+        set(FREEGLUT_BUILD_STATIC_LIBS ON CACHE BOOL "" FORCE)
+        FetchContent_Declare(freeglut
+                GIT_REPOSITORY https://github.com/freeglut/freeglut.git
+                GIT_TAG v3.6.0
+                GIT_SHALLOW TRUE)
+        FetchContent_MakeAvailable(freeglut)
+        set(GLUT_INCLUDE_DIR ${freeglut_SOURCE_DIR}/include)
+        set(GLUT_LIBS OpenGL::GL freeglut_static)
+    endif()
+endif()
 
 add_compile_definitions(GL_SILENCE_DEPRECATION)
 
@@ -64,8 +114,4 @@ target_include_directories(mini_minecraft PRIVATE
         ${FASTNOISE_DIR}
 )
 
-if (APPLE)
-    target_link_libraries(mini_minecraft PRIVATE "-framework OpenGL -framework GLUT -framework ApplicationServices" glm::glm)
-else()
-    target_link_libraries(mini_minecraft PRIVATE OpenGL::GL GLUT::GLUT glm::glm)
-endif()
+target_link_libraries(mini_minecraft PRIVATE ${GLUT_LIBS} glm::glm)
