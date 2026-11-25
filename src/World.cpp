@@ -30,6 +30,10 @@ void World::load() {
         }
     }
 
+    buildFaceInstances();
+}
+
+void World::buildFaceInstances() {
     for (int cx = 0; cx < m_worldSizeInChunks.x; cx++) {
         for (int cz = 0; cz < m_worldSizeInChunks.y; cz++) {
             const Chunk* xPos = chunkAt(cx + 1, cz);
@@ -40,6 +44,10 @@ void World::load() {
                 .buildFaceInstances(xPos, xNeg, zPos, zNeg);
         }
     }
+}
+
+int World::chunkIndex(int cx, int cz) const {
+    return cx * m_worldSizeInChunks.y + cz;
 }
 
 const Chunk* World::chunkAt(int cx, int cz) const {
@@ -77,4 +85,8 @@ std::vector<const Chunk*> World::chunksOverlapping(const AABB& box) const {
         }
     }
     return result;
+}
+
+void World::setChunkAt(int x, int z, const Chunk &chunk) {
+    m_chunks[x * m_worldSizeInChunks.y + z] = chunk;
 }

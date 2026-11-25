@@ -30,8 +30,9 @@ Minecraft::Minecraft()
     m_player = std::make_unique<Player>(glm::vec3(10, 30, 10), glm::vec3(0.7, 2, 0.7));
     m_showPlayerBox = true;
     m_debugMode = false;
-    m_showRay = true;
+    m_showSelectedBlock = true;
     m_showCurrentChunk = false;
+    m_showPosToBeAdded = false;
 }
 
 Minecraft::~Minecraft() {
@@ -201,7 +202,44 @@ void Minecraft::onReshape(int w, int h) {
     m_projection = glm::perspective(glm::radians(60.0f), (float)w / (float)h, 0.1f, 100.0f);
 }
 
-void Minecraft::onMouse(int button, int state, int x, int y) {}
+void Minecraft::onMouse(int button, int state, int x, int y) {
+    if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP) {
+        // add a new block
+        if (m_posToBeAdded) {
+            const glm::ivec3 worldPos = glm::ivec3(*m_posToBeAdded);
+            const int cx = (int)std::floor((float)worldPos.x / CHUNK_SIZE);
+            const int cz = (int)std::floor((float)worldPos.z / CHUNK_SIZE);
+            auto chunk = m_world->chunkAt(cx, cz);
+            if (!chunk) { return; } // outside the world
+            auto newChunk = Chunk(chunk->getPosition());
+            newChunk.setBlockPositions(chunk->getBlockPositions());
+            // chunk blocks are stored in local coordinates
+            const glm::ivec3 localPos = worldPos - CHUNK_SIZE * glm::ivec3(cx, 0, cz);
+            newChunk.addBlock(localPos, Material::STONE);
+            m_world->setChunkAt(cx, cz, newChunk);
+            m_world->buildFaceInstances();
+            rebuildBatches();
+        }
+    }
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
+        // remove selected block
+        if (m_selectedCubePos) {
+            const glm::ivec3 worldPos = glm::ivec3(*m_selectedCubePos);
+            const int cx = (int)std::floor((float)worldPos.x / CHUNK_SIZE);
+            const int cz = (int)std::floor((float)worldPos.z / CHUNK_SIZE);
+            auto chunk = m_world->chunkAt(cx, cz);
+            if (!chunk) { return; } // outside the world
+            auto newChunk = Chunk(chunk->getPosition());
+            newChunk.setBlockPositions(chunk->getBlockPositions());
+            // chunk blocks are stored in local coordinates
+            const glm::ivec3 localPos = worldPos - CHUNK_SIZE * glm::ivec3(cx, 0, cz);
+            newChunk.removeBlockAt(localPos);
+            m_world->setChunkAt(cx, cz, newChunk);
+            m_world->buildFaceInstances();
+            rebuildBatches();
+        }
+    }
+}
 void Minecraft::onMotion(int x, int y) {}
 void Minecraft::onPassiveMotion(int x, int y) {
     if (m_debugMode) { return; } // camera movement disabled on debug mode
@@ -296,12 +334,15 @@ void Minecraft::onUpdate() {
 
     m_camera->setPosition(m_player->getPosition() + glm::vec3(0.0f, m_player->getBox().y * 0.9f, 0.0f));
 
-    if (m_showRay) {
+    if (m_showSelectedBlock) {
         // check for ray collisions
         auto ray = Ray(m_camera->getPosition(), glm::normalize(m_camera->getFront()));
         const float step = 0.1f;
-        const float reach = 5.0f;
+        const float reach = 10.0f;
         m_selectedCubePos.reset();
+        m_posToBeAdded.reset();
+        m_chunkToModify.reset();
+        std::optional<glm::ivec3> lastPos;
         for (float t = 0.0f; t <= reach && !m_selectedCubePos; t += step) {
             const auto pos = ray.pointAt(t);
             const glm::ivec3 blockPos = glm::ivec3(glm::floor(pos));
@@ -310,8 +351,17 @@ void Minecraft::onUpdate() {
                 const glm::ivec3 worldOffset = CHUNK_SIZE * glm::ivec3(chunkPos.x, 0, chunkPos.y);
                 if (chunk.hasBlockAt(blockPos - worldOffset)) {
                     m_selectedCubePos = glm::vec3(blockPos);
+                    if (lastPos) {
+                        m_posToBeAdded = glm::vec3(*lastPos);
+                    }
+                    // if (chunkhasBlockAt(*lastPos - worldOffset)) {
+                    //     m_chunkToModify = chunk;
+                    // }
                     break;
                 }
+            }
+            if (!m_selectedCubePos) {
+                lastPos = blockPos;
             }
         }
     }
@@ -357,12 +407,27 @@ void Minecraft::onDisplay() {
         m_renderer->drawLines(*m_playerIBO, *m_playerVBO, *m_playerProgram);
     }
 
-    if (m_showRay && m_selectedCubePos) {
+    if (m_showSelectedBlock && m_selectedCubePos) {
         m_playerProgram->bind();
 
         // slightly larger than the block to avoid z-fighting with its faces
         const float margin = 0.002f;
         auto model = glm::translate(glm::mat4(1.0f), *m_selectedCubePos - glm::vec3(margin));
+        model = glm::scale(model, glm::vec3(1.0f + 2.0f * margin));
+        auto mvp = m_projection * view * model;
+
+        m_playerProgram->bind();
+        m_playerProgram->setUniformMat4("u_mvp", mvp);
+        m_playerProgram->setUniformVec3("u_color", glm::vec3(1.0f, 1.0f, 1.0f));
+        m_playerVAO->bind();
+        m_renderer->drawLines(*m_playerIBO, *m_playerVBO, *m_playerProgram);
+    }
+
+    if (m_showPosToBeAdded && m_posToBeAdded) {
+        m_playerProgram->bind();
+
+        const float margin = 0.002f;
+        auto model = glm::translate(glm::mat4(1.0f), *m_posToBeAdded - glm::vec3(margin));
         model = glm::scale(model, glm::vec3(1.0f + 2.0f * margin));
         auto mvp = m_projection * view * model;
 
@@ -399,7 +464,10 @@ void Minecraft::onDisplay() {
         ImGui::Checkbox("Show player box", &m_showPlayerBox);
 
         ImGui::Separator();
-        ImGui::Checkbox("Show selected cube", &m_showRay);
+        ImGui::Checkbox("Show selected cube", &m_showSelectedBlock);
+
+        ImGui::Separator();
+        ImGui::Checkbox("Show cube to be added", &m_showPosToBeAdded);
 
         ImGui::Separator();
         ImGui::Checkbox("Show 'current' chunk", &m_showCurrentChunk);

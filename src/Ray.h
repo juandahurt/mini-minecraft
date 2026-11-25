@@ -13,6 +13,9 @@ class Ray {
 public:
     Ray(const glm::vec3& position, const glm::vec3& direction);
     glm::vec3 pointAt(float t) const;
+
+    glm::vec3 getPosition() const;
+    glm::vec3 getDirection() const;
 };
 
 
