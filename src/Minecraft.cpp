@@ -52,7 +52,7 @@ void Minecraft::create(int argc, char** argv) {
     glutInitWindowSize(instance->m_width, instance->m_height);
     glutCreateWindow(instance->m_title.c_str());
 
-    // glutFullScreen();
+    glutFullScreen();
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
