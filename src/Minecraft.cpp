@@ -4,10 +4,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#ifdef __APPLE_CC__
+#ifdef __APPLE__
 #include <GLUT/glut.h>
 #include <OpenGL/gl3.h>
 #include <ApplicationServices/ApplicationServices.h>
+#else
+#include <GL/freeglut.h>
 #endif
 
 #include "Face.h"
@@ -48,7 +50,13 @@ void Minecraft::create(int argc, char** argv) {
     instance = std::make_unique<Minecraft>();
 
     glutInit(&argc, argv);
+#ifdef __APPLE__
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH | GLUT_3_2_CORE_PROFILE);
+#else
+    glutInitContextVersion(3, 3);
+    glutInitContextProfile(GLUT_CORE_PROFILE);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
+#endif
     glutInitWindowSize(instance->m_width, instance->m_height);
     glutCreateWindow(instance->m_title.c_str());
 
@@ -517,12 +525,14 @@ void Minecraft::showMousePointer() {
 }
 
 void Minecraft::moveMouseToWindowCenter() {
-    #ifdef __APPLE__ // TODO: add linux variation
+    #ifdef __APPLE__
     int wx = glutGet(GLUT_WINDOW_X);
     int wy = glutGet(GLUT_WINDOW_Y);
     int cx = m_width / 2;
     int cy = m_height / 2;
     CGWarpMouseCursorPosition(CGPointMake(wx + cx, wy + cy));
     CGAssociateMouseAndMouseCursorPosition(true);
+    #else
+    glutWarpPointer(m_width / 2, m_height / 2);
     #endif
 }

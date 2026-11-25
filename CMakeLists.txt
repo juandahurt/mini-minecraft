@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 4.3)
+cmake_minimum_required(VERSION 3.20)
 project(mini_minecraft)
 
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
-find_package(GLM REQUIRED)
+find_package(glm CONFIG REQUIRED)
 
 add_compile_definitions(GL_SILENCE_DEPRECATION)
 
@@ -64,4 +64,8 @@ target_include_directories(mini_minecraft PRIVATE
         ${FASTNOISE_DIR}
 )
 
-target_link_libraries(mini_minecraft PRIVATE "-framework OpenGL -framework GLUT -framework ApplicationServices" glm::glm)
+if (APPLE)
+    target_link_libraries(mini_minecraft PRIVATE "-framework OpenGL -framework GLUT -framework ApplicationServices" glm::glm)
+else()
+    target_link_libraries(mini_minecraft PRIVATE OpenGL::GL GLUT::GLUT glm::glm)
+endif()
