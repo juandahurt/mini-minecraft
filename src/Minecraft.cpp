@@ -36,6 +36,7 @@ Minecraft::Minecraft()
     m_showCurrentChunk = false;
     m_showPosToBeAdded = false;
     m_physicsEnabled = false;
+    m_selectedMaterial = STONE;
 }
 
 Minecraft::~Minecraft() {
@@ -212,6 +213,8 @@ void Minecraft::onReshape(int w, int h) {
 }
 
 void Minecraft::onMouse(int button, int state, int x, int y) {
+    if (m_debugMode) { return; }
+
     if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP) {
         // add a new block
         if (m_posToBeAdded) {
@@ -224,7 +227,7 @@ void Minecraft::onMouse(int button, int state, int x, int y) {
             newChunk.setBlockPositions(chunk->getBlockPositions());
             // chunk blocks are stored in local coordinates
             const glm::ivec3 localPos = worldPos - CHUNK_SIZE * glm::ivec3(cx, 0, cz);
-            newChunk.addBlock(localPos, Material::STONE);
+            newChunk.addBlock(localPos, m_selectedMaterial);
             m_world->setChunkAt(cx, cz, newChunk);
             m_world->buildFaceInstances();
             rebuildBatches();
@@ -485,6 +488,24 @@ void Minecraft::onDisplay() {
 
         ImGui::Separator();
         ImGui::Checkbox("'Physics' enabled", &m_physicsEnabled);
+
+        char* materials[] = {"Grass", "Dirt", "Stone", "Snow"};
+        static int selectedMaterial = static_cast<int>(m_selectedMaterial);
+
+        if (ImGui::BeginCombo("Material", materials[selectedMaterial])) {
+            for (int i = 0; i < IM_ARRAYSIZE(materials); i++) {
+                const bool isSelected = selectedMaterial == i;
+                if (ImGui::Selectable(materials[i], isSelected)) {
+                    selectedMaterial = i;
+                    m_selectedMaterial = static_cast<Material>(i);
+                }
+
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
 
         if (ImGui::CollapsingHeader("Terrain", ImGuiTreeNodeFlags_DefaultOpen)) {
             auto& p = m_world->generator().params();
